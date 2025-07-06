@@ -1,0 +1,5 @@
+.quarto/*
+.quarto-cache/*
+.cache/*
+.quarto*
+.git/

@@ -1,0 +1,96 @@
+---
+title: "Análisis Estadístico y ML del Titanic"
+author: "Fabrizio Torrico"
+date: "05/07/2025"
+format:
+  html:
+    code-fold: false
+    code-tools: true
+    code-copy: true
+    toc: true
+    toc-depth: 3
+    fig-width: 10
+    fig-height: 6
+    embed-resources: true
+    error: true
+    warning: true
+    message: true
+engine: julia
+execute:
+  freeze: false
+  cache: false
+  eval: true
+  echo: true
+  warning: true
+  error: true
+  include: true
+---
+
+
+<img src="http://data.freehdw.com/ships-titanic-vehicles-best.jpg"  Width="800">
+
+<a id="introduction" ></a><br>
+This kernel is for all aspiring data scientists to learn from and to review their knowledge. We will have a detailed statistical analysis of Titanic data set along with Machine learning model implementation. I am super excited to share my first kernel with the Kaggle community. As I go on in this journey and learn new topics, I will incorporate them with each new updates. So, check for them and please <b>leave a comment</b> if you have any suggestions to make this kernel better!! Going back to the topics of this kernel, I will do more in-depth visualizations to explain the data, and the machine learning classifiers will be used to predict passenger survival status.
+
+<div style="text-align: left"> 
+    <br>
+    NOTE:
+    <ul>
+        <li>Follow me on <a href="https://www.youtube.com/channel/UC1mPjGyLcZmsMgZ8SJgrfdw"><b>YOUTUBE</b></a> to get the video tutorial for this notebook.
+        <li>If you want to learn more about Advanced Regression models, please check out <a href="https://www.kaggle.com/masumrumi/a-stats-analysis-and-ml-workflow-of-house-pricing">this</a> kernel.</li>
+        <li>If you are reading this on github, I recommend you read this on <a href="https://www.kaggle.com/masumrumi/a-statistical-analysis-ml-workflow-of-titanic">kaggle</a>.</li>
+    </ul>
+</div>
+
+# Kernel Goals
+<a id="aboutthiskernel"></a>
+***
+There are three primary goals of this kernel.
+- <b>Do a statistical analysis</b> of how some group of people was survived more than others. 
+- <b>Do an exploratory data analysis(EDA)</b> of titanic with visualizations and storytelling.  
+- <b>Predict</b>: Use machine learning classification models to predict the chances of passengers survival.
+
+P.S. If you want to learn more about regression models, try this [kernel](https://www.kaggle.com/masumrumi/a-stats-analysis-and-ml-workflow-of-house-pricing/edit/run/9585160). 
+
+```{julia}
+using Pkg
+Pkg.activate(".")
+Pkg.add(["DataFrames", "CSV", "CairoMakie", "StatsBase",
+    "Statistics", "MLJ", "MLJModels", "HypothesisTests",
+    "Distributions", "Missings", "CategoricalArrays", "AlgebraOfGraphics", "Chain"])
+Pkg.instantiate() # Instala las dependencias definidas en Project.toml
+```
+
+```{julia}
+import DataFrames as DF
+import CSV
+import CairoMakie as Makie
+import AlgebraOfGraphics as AoG
+import Statistics as Stats
+import StatsBase
+import Chain: @chain
+import Random: shuffle
+```
+
+```{julia}
+readdir("./input/")
+```
+
+```{julia}
+## Importing the datasets
+import DataFrames as DF
+
+train = CSV.read("./input/train.csv", DF.DataFrame)
+test = CSV.read("./input/test.csv", DF.DataFrame); # use semicolon to avoid printing the DataFrame
+```
+
+```{julia}
+## Importing the datasets
+print("Hello")
+```
+
+
+
+```{julia}
+asdasd
+```
