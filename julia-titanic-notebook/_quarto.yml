@@ -8,28 +8,28 @@ format:
     theme: cosmo
     toc: true
     toc-depth: 3
-    code-fold: false # Mostrar código por defecto
-    code-tools: true # Herramientas para mostrar/ocultar código
-    code-copy: true # Botón para copiar código
+    code-fold: false
+    code-tools: true
+    code-copy: true
     fig-width: 10
     fig-height: 6
     embed-resources: true
     self-contained: true
-    error: true # Continuar ejecutando aunque haya errores
+    error: true
     warning: true
     message: true
 
 execute:
-  freeze: false # No congelar ejecución
-  cache: true # No usar caché
-  eval: true # Evaluar código por defecto
-  echo: true # Mostrar código por defecto
-  warning: true # Mostrar warnings
-  error: true # Mostrar errores pero continuar
-  include: true # Incluir resultados
-  keep-md: false # No mantener archivos markdown intermedios
-  daemon: true # Usar daemon para Julia (más rápido)
-  cache-refresh: false # No refrescar caché automáticamente
+  freeze: false
+  cache: true
+  eval: true
+  echo: true
+  warning: true
+  error: true
+  include: true
+  keep-md: false
+  daemon: true
+  cache-refresh: false
 jupyter:
   kernels:
     - julia-1.11

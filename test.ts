@@ -1,18 +1,13 @@
-const letters2 = [
-  {
-    letter: "a",
-    value: 1,
-  },
-  {
-    letter: "b",
-    value: 2,
-  },
-  {
-    letter: "c",
-    value: 3,
-  },
-];
+type User {
+    id: number;
+    name: string;
+    email: string;
+}
 
-letters2.map((l) => {
-  console.log(l);
-});
+
+const user:User = {
+    id: 1,
+    name: "John Doe",
+    email: "john.doe@example.com"
+}
+

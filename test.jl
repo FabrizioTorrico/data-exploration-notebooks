@@ -1,21 +1,5 @@
-"""
-	function_name(arg1::String, arg2::String) -> String
+letters::Vector{Int} = [1, 2, 3, 4, 5]
 
-Brief description of the function.
+val = letters[2]
 
-# Arguments
-- `arg1::String`: Description of arg1
-- `arg2::String`: Description of arg2
-
-# Returns
-- `String`: Description of return value
-
-# Examples
-```julia
-result = function_name(1, "hello")
-"""
-function function_name(arg1::String, arg2::String)::String
-	return "Hello, World!"
-end
-
-a = function_name(2, "hello")
+val 

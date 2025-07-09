@@ -79,6 +79,8 @@ import StatsBase
 import Chain: @chain
 import Random: shuffle
 import IJulia
+
+
 ```
 
 ```{julia}
@@ -97,36 +99,8 @@ After loading the necessary modules, we need to import the datasets. Many of the
 ## Importing the datasets
 using CSV
 
-const train::DF.Dataframe = read("./input/train.csv", DF.DataFrame, types = Dict(
-        :PassengerId => Int64,
-        :Pclass => Int64,
-        :Name => String,
-        :Sex => String,
-        :Age => Union{Missing, Float64},
-        :SibSp => Int64,
-        :Parch => Int64,
-        :Ticket => String,
-        :Fare => Float64, 
-        :Cabin => Union{Missing, String}, 
-        :Embarked => Union{Missing, String},
-        :Survived => Int64
-    )
-)
-
-
-test = CSV.read("./input/test.csv", DF.DataFrame, types = Dict(
-        :PassengerId => Int64,
-        :Pclass => Int64,
-        :Name => String,
-        :Sex => String,
-        :Age => Union{Missing, Float64},
-        :SibSp => Int64,
-        :Parch => Int64,
-        :Ticket => String,
-        :Fare => Float64, 
-        :Cabin => Union{Missing, String}, 
-        :Embarked => Union{Missing, String},
-    ));
+train = CSV.read("./input/train.csv", DF.DataFrame)
+test = CSV.read("./input/test.csv", DF.DataFrame);
 ```
 
 You are probably wondering why two datasets? Also, Why have I named it "train" and "test"? To explain that I am going to give you an overall picture of the supervised machine learning process.
@@ -135,11 +109,10 @@ You are probably wondering why two datasets? Also, Why have I named it "train" a
 
 ```{julia}
 DF.first(train, 5)
-print(train.Pclass)
 ```
 
 ```{julia}
-temp = @chain train begin
+@chain train begin
     DF.dropmissing(:Age) # Drop rows with missing Age
     DF.groupby(:Sex)
     DF.combine(:Age => minimum => :MinAge)
@@ -159,27 +132,18 @@ DF.describe(train, :eltype)
 # Train Set
 
 ```{julia}
-#| execution: {iopub.execute_input: '2021-06-26T16:35:04.932322Z', iopub.status.busy: '2021-06-26T16:35:04.932015Z', iopub.status.idle: '2021-06-26T16:35:04.958015Z', shell.execute_reply: '2021-06-26T16:35:04.957084Z', shell.execute_reply.started: '2021-06-26T16:35:04.932234Z'}
 DF.first(train[shuffle(1:DF.nrow(train))[1:5], :], 5)
 ```
 
 # Test Set
 
 ```{julia}
-#| _cell_guid: 0f0649fa-b003-403f-9d7c-d2d14a6cf068
-#| _kg_hide-input: true
-#| _uuid: 877b2fc905cd60e3f9a525b6fedad9a5c0a671e5
-#| execution: {iopub.execute_input: '2021-06-26T16:35:04.960536Z', iopub.status.busy: '2021-06-26T16:35:04.960114Z', iopub.status.idle: '2021-06-26T16:35:08.927166Z', shell.execute_reply: '2021-06-26T16:35:08.926315Z', shell.execute_reply.started: '2021-06-26T16:35:04.960357Z'}
-## Take a look at the overview of the dataset.
 DF.first(test[shuffle(1:DF.nrow(test))[1:5], :], 5)
 ```
 
 This is a sample of train and test dataset. Lets find out a bit more about the train and test dataset.
 
 ```{julia}
-#| _kg_hide-input: true
-#| _uuid: 1258a94388599a131fe08cd6e05205b15d53df66
-#| execution: {iopub.execute_input: '2021-06-26T16:35:08.929903Z', iopub.status.busy: '2021-06-26T16:35:08.929444Z', iopub.status.idle: '2021-06-26T16:35:08.945917Z', shell.execute_reply: '2021-06-26T16:35:08.945011Z', shell.execute_reply.started: '2021-06-26T16:35:08.92985Z'}
 println("The shape of the train data is (row, column): $(size(train))")
 println("Train dataset info:")
 DF.describe(train)
@@ -570,12 +534,7 @@ train.Survived = survivors;
 If you have paid attention so far, you know that there is only one missing value in the fare column. Let's have it.
 
 ```{julia}
-#| code-fold: true
-#| _cell_guid: 2c75f369-e781-43df-be06-32585b372a0a
-#| _kg_hide-input: true
-#| _uuid: 020cafd121f2e6cbed89265c993ef3d76566cd6b
-#| execution: {iopub.execute_input: '2021-06-26T16:35:09.983259Z', iopub.status.busy: '2021-06-26T16:35:09.982793Z', iopub.status.idle: '2021-06-26T16:35:10.000785Z', shell.execute_reply: '2021-06-26T16:35:09.999778Z', shell.execute_reply.started: '2021-06-26T16:35:09.983086Z'}
-test[ismissing.(test.Fare), :];
+test[ismissing.(test.Fare), :]
 ```
 
 Here, We can take the average of the **Fare** column to fill in the NaN value. However, for the sake of learning and practicing, we will try something else. We can take the average of the values where**Pclass** is **_3_**, **Sex** is **_male_** and **Embarked** is **_S_**
@@ -592,7 +551,6 @@ missing_value = @chain test begin
     Stats.mean
 end
 
-# Replace missing fare
 test.Fare = coalesce.(test.Fare, missing_value);
 ```
 
@@ -636,13 +594,14 @@ Now, let's see how the features are related to each other by creating some visua
 
 ---
 
+
 ```{julia}
 Makie.set_theme!(Makie.theme_light())
 ```
 
 ```{julia}
-fig1 = Makie.Figure()
-ax1 = Makie.Axis(fig1[1, 1], 
+fig = Makie.Figure()
+ax = Makie.Axis(fig[1, 1], 
     title = "Survived/Non-Survived Passenger Gender Distribution",
     xlabel = "Sex",
     ylabel = "% of passenger survived",
@@ -658,12 +617,10 @@ survival_by_sex = @chain train begin
 end
 
 # Create elegant barplot
-Makie.barplot!(ax1, 1:2, survival_by_sex.survival_rate, 
-           color = ["green", "pink"],
-           strokewidth = 2,
-           strokecolor = :black)
+Makie.barplot!(ax, 1:2, survival_by_sex.survival_rate, 
+           color = ["green", "pink"])
 
-fig1
+fig
 
 ```
 
@@ -721,8 +678,8 @@ This count plot shows the actual distribution of male and female passengers that
 ---
 
 ```{julia}
-fig3 = Makie.Figure()
-ax3 = Makie.Axis(fig3[1, 1],
+fig = Makie.Figure()
+ax = Makie.Axis(fig[1, 1],
     title = "Passenger Class Distribution - Survival Percentage",
     xlabel = "Passenger Class",
     ylabel = "Percentage",
@@ -739,32 +696,28 @@ class_survival = @chain train begin
     DF.unstack(:Survived, :count, fill=0)
 end
 
-println(class_survival)
-no_survived = class_survival[:, 2]  # Second column (not survived)
-yes_survived = class_survival[:, 3]  # Third column (survived)
+no_survived = class_survival[:, 2]
+yes_survived = class_survival[:, 3]
 total_by_class = no_survived + yes_survived
 
-println(total_by_class)
 survived_percentage = (yes_survived ./ total_by_class) * 100
 not_survived_percentage = (no_survived ./ total_by_class) * 100
 
-println(survived_percentage)
 flatten = vcat(not_survived_percentage ,survived_percentage)
 
-
-Makie.barplot!(ax3, [1, 2, 3, 1, 2, 3], flatten, stack=[1, 2, 3, 1, 2, 3], color = ["red", "red", "red", "green", "green", "green"], strokewidth = 1, strokecolor = :black)
+Makie.barplot!(ax, [1, 2, 3, 1, 2, 3], flatten, stack=[1, 2, 3, 1, 2, 3], color = ["red", "red", "red", "green", "green", "green"], strokewidth = 1, strokecolor = :black)
 
 # Add legend
-Makie.Legend(fig3[1, 2],
+Makie.Legend(fig[1, 2],
     [Makie.PolyElement(color = "#F44336"), Makie.PolyElement(color = "#4CAF50")],
     ["Not Survived", "Survived"],
     "Survival Status")
 
-fig3
+fig
 ```
 
 ```{julia}
-Makie.barplot([1, 2, 3], survived_percentage, axis=(xticks=(1:3, ["1st Class", "2nd Class", "3rd Class"]), title = "Passenger Class Distribution - Survived vs Non-Survived"),)
+Makie.barplot([1, 2, 3], survived_percentage, axis=(xticks=(1:3, ["1st Class", "2nd Class", "3rd Class"]), title = "Passenger Class Distribution - Survived vs Non-Survived"), color=["brown", "orange", "green"])
 ```
 
 - It looks like ...
@@ -778,21 +731,17 @@ fig = Makie.Figure(
     title = "Passenger Class Distribution - Survived vs Non-Survived",
     xlabel = "Passenger Class",
     ylabel = "Density of Passenger Survived",
-    
 ) # Adjust figure size as needed
 ax =  Makie.Axis(fig[1, 1], xticks = ([1, 2, 3], ["Upper", "Middle", "Lower"]))           
 
-not_survived = train.Pclass[train.Survived .== 0]
-survived = train.Pclass[train.Survived .== 1]
-
 d1 = Makie.density!(ax, train.Pclass[train.Survived .== 0], color = (:gray, 0.2), strokecolor=:gray, strokewidth=2)
+
 d2= Makie.density!(ax, train.Pclass[train.Survived .== 1], color = (:green, 0.2), strokecolor=:green, strokewidth=2)
 
 Makie.axislegend(ax,
     [d1, d2],
     ["Not Survived", "Survived"],
     "Survival Status")
-
 
 fig
 ```
@@ -819,11 +768,9 @@ ax = Makie.Axis(fig[1, 1],
     xlabel = "Fare",
     ylabel = "Density of Passenger Survived",
 )
-
-not_survived = train.Fare[train.Survived .== 0]
-survived = train.Fare[train.Survived .== 1]
-d1 = Makie.density!(ax, not_survived, color = (:gray, 0.2), strokecolor=:gray, strokewidth=2)
-d2 = Makie.density!(ax, survived, color = (:green, 0.2), strokecolor=:green, strokewidth=2)
+ 
+d1 = Makie.density!(ax, train.Fare[train.Survived .== 0], color = (:gray, 0.2), strokecolor=:gray, strokewidth=2)
+d2 = Makie.density!(ax, train.Fare[train.Survived .== 1], color = (:green, 0.2), strokecolor=:green, strokewidth=2)
 
 Makie.axislegend(ax,
     [d1, d2],
@@ -886,39 +833,38 @@ In this section, we are going to discover more than two feature relations in a s
 
 ```{julia}
 
-fig8 = Makie.Figure(title="Survived by Sex and Age")
+fig = Makie.Figure(title="Survived by Sex and Age")
 
 # Create subplots for each combination
 
 for (i, (sex, survived)) in enumerate(Iterators.product(["female", "male"], [0, 1]))
 
-    ax = Makie.Axis(fig8[div(i - 1, 2) + 1, i % 2 + 1],
-        title = "$sex $survived",
+    ax = Makie.Axis(fig[div(i - 1, 2) + 1, i % 2 + 1],
+        title = "$sex $(survived == 1 ? "Survived" : "Not Survived")",
         xlabel = "Age",
         ylabel = "Count"
     )
     
     subset_data = train[(train.Sex .== sex) .& (train.Survived .== survived) .& .!ismissing.(train.Age), :]
     
-    if DF.nrow(subset_data) > 0
-        Makie.hist!(ax, subset_data.Age, bins = 20, 
-                color = survived == 1 ? "green" : "gray",
-                strokewidth = 1, strokecolor = :white)
-    end
+    Makie.hist!(ax, subset_data.Age, bins = 20, 
+            color = survived == 1 ? "green" : "gray",
+            strokewidth = 1, strokecolor = :white)
+   
 end
 
-fig8
+fig
 ```
 
 Facetgrid is a great way to visualize multiple variables and their relationships at once. From the chart in section 3a we have a intuation that female passengers had better prority than males during the tragedy. However, from this facet grid, we can also understand which age range groups survived more than others or were not so lucky
 
 ```{julia}
-fig8 = Makie.Figure(title="Survived by Sex and Age")
+fig = Makie.Figure(title="Survived by Sex and Age")
 
 # Create subplots for each combination
 for (i, (sex, embarked)) in enumerate(Iterators.product(["female", "male"], ["S", "C", "Q"]))
 
-    ax = Makie.Axis(fig8[div(i - 1, 2) + 1, i % 2 + 1],
+    ax = Makie.Axis(fig[div(i - 1, 2) + 1, i % 2 + 1],
         title = "$sex $embarked",
     )
 
@@ -941,14 +887,14 @@ for (i, (sex, embarked)) in enumerate(Iterators.product(["female", "male"], ["S"
 end
 
 
-Makie.Legend(fig8[1, 3], 
+Makie.Legend(fig[1, 3], 
     [Makie.PolyElement(color = (:gray, 0.7)), 
      Makie.PolyElement(color = (:green, 0.7))],
     ["Not Survived", "Survived"],
     "Survival Status"
 )
 
-fig8
+fig
 ```
 
 This is another compelling facet grid illustrating four features relationship at once. They are **Embarked, Age, Survived & Sex**.
@@ -968,14 +914,14 @@ Now that I have steered out the apparent let's see if we can get some insights t
 - There were very few females boarded on Queenstown, however, most of them survived.
 
 ```{julia}
-fig9 = Makie.Figure(resolution = (1000, 600))
+fig = Makie.Figure(resolution = (1000, 600))
 
-ax9_m = Makie.Axis(fig9[1, 1],
+ax_m = Makie.Axis(fig[1, 1],
     title = "Male", 
     xlabel = "Fare",
     ylabel = "Age")
 # Female subplot
-ax9_f = Makie.Axis(fig9[1, 2], 
+ax_f = Makie.Axis(fig[1, 2], 
     title = "Female",
     xlabel = "Fare",
     ylabel = "Age")
@@ -984,23 +930,23 @@ female_data = train[(train.Sex .== "female") .& .!ismissing.(train.Age), :]
 male_data = train[(train.Sex .== "male") .& .!ismissing.(train.Age), :]
 
 
-Makie.scatter!(ax9_m, male_data.Fare, male_data.Age,
+Makie.scatter!(ax_m, male_data.Fare, male_data.Age,
            color = [s == 1 ? "green" : "gray" for s in male_data.Survived],
            strokewidth=1, strokecolor="white", markersize=14)
-Makie.scatter!(ax9_f, female_data.Fare, female_data.Age,
+Makie.scatter!(ax_f, female_data.Fare, female_data.Age,
            color = [s == 1 ? "green" : "gray" for s in female_data.Survived],
            strokewidth=1, strokecolor="white", markersize=14)
 
 
 # Add legend
-Makie.Legend(fig9[1, 3],
+Makie.Legend(fig[1, 3],
     [Makie.MarkerElement(color = "gray", marker = :circle), 
      Makie.MarkerElement(color = "green", marker = :circle)],
     ["Not Survived", "Survived"],
     "Survived")
 
-Makie.Label(fig9[0, :], "Survived by Sex, Fare and Age")
-fig9
+Makie.Label(fig[0, :], "Survived by Sex, Fare and Age")
+fig
 ```
 
 This facet grid unveils a couple of interesting insights. Let's find out.
@@ -1009,8 +955,10 @@ This facet grid unveils a couple of interesting insights. Let's find out.
 - Most of the passengers were with in the Fare range of \$100.
 
 ```{julia}
-fig10 = Makie.Figure(size = (800, 600))
-ax10 = Makie.Axis(fig10[1, 1],
+train = train[train.Fare .< 500, :]
+
+fig = Makie.Figure(size = (800, 600))
+ax = Makie.Axis(fig[1, 1],
     title = "Parents/Children Survival Rate",
     xlabel = "Number of Parents/Children",
     ylabel = "Survival Rate",
@@ -1027,36 +975,32 @@ end
 
 parch_survival.std_error = parch_survival.std_dev ./ sqrt.(parch_survival.count)
 
-Makie.scatterlines!(ax10, parch_survival.Parch, parch_survival.survival_rate,
+Makie.scatterlines!(ax, parch_survival.Parch, parch_survival.survival_rate,
     color = "#2196F3", 
     linewidth = 3,
     markersize = 8
 )
 
-error = Makie.errorbars!(ax10, parch_survival.Parch, parch_survival.survival_rate, 
+error = Makie.errorbars!(ax, parch_survival.Parch, parch_survival.survival_rate, 
     parch_survival.std_error,
     color = "blue",
     linewidth = 2,
     whiskerwidth = 8
 )
 
-Makie.Legend(fig10[1, 2],
+Makie.Legend(fig[1, 2],
     [Makie.PolyElement(color = "#2196F3"), Makie.PolyElement(color = "blue")],
     ["Survival Rate", "Standard Error"],
     "Legend"
 )
-fig10
+fig
 ```
 
 **Passenger who traveled in big groups with parents/children had less survival rate than other passengers.**
 
 ```{julia}
-# sns.factorplot(x =  "SibSp", y = "Survived", data = train,kind = "point",size = 8)
-# plt.title('Factorplot of Sibilings/Spouses survived', fontsize = 25)
-# plt.subplots_adjust(top=0.85)
-
-fig11 = Makie.Figure(size = (800, 600))
-ax11 = Makie.Axis(fig11[1, 1],
+fig = Makie.Figure(size = (800, 600))
+ax = Makie.Axis(fig[1, 1],
     title = "Siblings/Spouses Survival Rate",
     xlabel = "Number of Siblings/Spouses",
     ylabel = "Survival Rate",
@@ -1073,25 +1017,25 @@ end
 
 sibsp_survival.std_error = sibsp_survival.std_dev ./ sqrt.(sibsp_survival.count)
 
-Makie.scatterlines!(ax11, sibsp_survival.SibSp, sibsp_survival.survival_rate,
+Makie.scatterlines!(ax, sibsp_survival.SibSp, sibsp_survival.survival_rate,
     color = "#2196F3", 
     linewidth = 3,
     markersize = 8
 )
 
-error = Makie.errorbars!(ax11, sibsp_survival.SibSp, sibsp_survival.survival_rate, 
+error = Makie.errorbars!(ax, sibsp_survival.SibSp, sibsp_survival.survival_rate, 
     sibsp_survival.std_error,
     color = "blue",
     linewidth = 2,
     whiskerwidth = 8
 )
 
-Makie.Legend(fig11[1, 2],
+Makie.Legend(fig[1, 2],
     [Makie.PolyElement(color = "#2196F3"), Makie.PolyElement(color = "blue")],
     ["Survival Rate", "Standard Error"],
     "Legend"
 )
-fig11
+fig
 ```
 
 **While, passenger who traveled in small groups with sibilings/spouses had better changes of survivint than other passengers.**
@@ -1116,39 +1060,32 @@ DF.describe(train)
 ```
 
 ```{julia}
-#| _cell_guid: 327c6775-9ba4-4d65-8c97-304cc9512e6a
-#| _kg_hide-input: true
-#| _uuid: 2f9f5fb7bade4d82d7b5a564a8ac91123b4921d2
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.299834Z', iopub.status.busy: '2021-06-26T16:35:15.299339Z', iopub.status.idle: '2021-06-26T16:35:15.331049Z', shell.execute_reply: '2021-06-26T16:35:15.330129Z', shell.execute_reply.started: '2021-06-26T16:35:15.29957Z'}
-train.describe(include =['O'])
+categorical_cols = [col for col in names(train) if eltype(train[!, col]) <: Union{String, AbstractString}]
+DF.describe(train[!, categorical_cols])
 ```
 
 ```{julia}
-#| _cell_guid: 5b817552-ecb8-4f6e-9950-6697d4c44d1f
-#| _kg_hide-input: true
-#| _uuid: c88dcae6209f02226f2e772b42616b5650d108f4
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.33335Z', iopub.status.busy: '2021-06-26T16:35:15.332779Z', iopub.status.idle: '2021-06-26T16:35:15.352959Z', shell.execute_reply: '2021-06-26T16:35:15.35204Z', shell.execute_reply.started: '2021-06-26T16:35:15.333034Z'}
-# Overview(Survived vs non survied)
-survived_summary = train.groupby("Survived")
-survived_summary.mean().reset_index()
+survived_summary = @chain train begin
+    DF.select(DF.names(train, Number)...)
+    DF.groupby(:Survived)
+    DF.combine(DF.All() .=> Stats.mean)
+end
 ```
 
 ```{julia}
-#| _cell_guid: 502dd0d2-a51a-47da-904c-66c9840a1b74
-#| _kg_hide-input: true
-#| _uuid: 65f9a660b942a8f92db94fe8fc41ccfa76a354cd
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.354847Z', iopub.status.busy: '2021-06-26T16:35:15.354359Z', iopub.status.idle: '2021-06-26T16:35:15.371166Z', shell.execute_reply: '2021-06-26T16:35:15.37032Z', shell.execute_reply.started: '2021-06-26T16:35:15.354612Z'}
-survived_summary = train.groupby("Sex")
-survived_summary.mean().reset_index()
+sex_summary = @chain train begin
+    DF.select(DF.names(train, Number)...)
+    DF.groupby(:Sex)
+    DF.combine(DF.All() .=> Stats.mean)
+end
 ```
 
 ```{julia}
-#| _cell_guid: 68cb2dac-6295-44d6-8aa0-5cddb53dd72c
-#| _kg_hide-input: true
-#| _uuid: e49170e6e56329f68aba07a36389883ee1bee5ca
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.373155Z', iopub.status.busy: '2021-06-26T16:35:15.372618Z', iopub.status.idle: '2021-06-26T16:35:15.392055Z', shell.execute_reply: '2021-06-26T16:35:15.391506Z', shell.execute_reply.started: '2021-06-26T16:35:15.373092Z'}
-survived_summary = train.groupby("Pclass")
-survived_summary.mean().reset_index()
+class_summary = @chain train begin
+    DF.select(DF.names(train, Number)...)
+    DF.groupby(:Pclass)
+    DF.combine(DF.All() .=> Stats.mean)
+end
 ```
 
 I have gathered a small summary from the statistical overview above. Let's see what they are...
@@ -1167,49 +1104,65 @@ I have gathered a small summary from the statistical overview above. Let's see w
 ### Correlations
 
 ```{julia}
-#| _cell_guid: d0acfa7a-6f3e-4783-925d-6e443a9a5baa
-#| _kg_hide-input: true
-#| _uuid: c4057023aa30d3ce1befae168c00f3cb8491804b
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.393816Z', iopub.status.busy: '2021-06-26T16:35:15.393405Z', iopub.status.idle: '2021-06-26T16:35:15.406432Z', shell.execute_reply: '2021-06-26T16:35:15.405713Z', shell.execute_reply.started: '2021-06-26T16:35:15.393654Z'}
-pd.DataFrame(abs(train.corr()['Survived']).sort_values(ascending = False))
+train_clean = DF.dropmissing(train)
+train_numeric = DF.select(train_clean, DF.names(train_clean, Number)...)
+corr_matrix = Stats.cor(Stats.Matrix(train_numeric))
+
+corr_df = DF.DataFrame(corr_matrix, DF.names(train_numeric))
+
 ```
+
+
+```{julia}
+DF.sort(DF.DataFrame(
+    Variable = DF.names(corr_df),
+    Correlation = abs.(corr_df[!, :Survived])
+), [:Correlation], rev=true)
+```
+
 
 ** Sex is the most important correlated feature with _Survived(dependent variable)_ feature followed by Pclass.**
 
 ```{julia}
-#| _cell_guid: 3e9fdd2e-f081-48ad-9c0f-afa475b15dfe
-#| _kg_hide-input: true
-#| _uuid: c3212c222341c250aacee47c43b1a023b9b65857
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.408424Z', iopub.status.busy: '2021-06-26T16:35:15.407893Z', iopub.status.idle: '2021-06-26T16:35:15.421826Z', shell.execute_reply: '2021-06-26T16:35:15.42092Z', shell.execute_reply.started: '2021-06-26T16:35:15.408231Z'}
-## get the most important variables.
-corr = train.corr()**2
-corr.Survived.sort_values(ascending=False)
+DF.sort(DF.DataFrame(
+    Variable = DF.names(corr_df),
+    Correlation = abs.(corr_df[!, :Survived]) .^ 2
+), [:Correlation], rev=true)
 ```
 
 **Squaring the correlation feature not only gives on positive correlations but also amplifies the relationships.**
 
+
 ```{julia}
-#| _cell_guid: eee23849-a390-4d16-a8df-d29c6f575413
-#| _kg_hide-input: true
-#| _uuid: 285660c315b854497fe00847d051ceac5c9ec298
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.423924Z', iopub.status.busy: '2021-06-26T16:35:15.423431Z', iopub.status.idle: '2021-06-26T16:35:15.769867Z', shell.execute_reply: '2021-06-26T16:35:15.768898Z', shell.execute_reply.started: '2021-06-26T16:35:15.423681Z'}
-## heatmeap to see the correlation between features.
-# Generate a mask for the upper triangle (taken from seaborn example gallery)
-import numpy as np
-mask = np.zeros_like(train.corr(), dtype=np.bool)
-mask[np.triu_indices_from(mask)] = True
-sns.set_style('whitegrid')
-plt.subplots(figsize = (15,12))
-sns.heatmap(train.corr(),
-            annot=True,
-            mask = mask,
-            cmap = 'RdBu', ## in order to reverse the bar replace "RdBu" with "RdBu_r"
-            linewidths=.9,
-            linecolor='white',
-            fmt='.2g',
-            center = 0,
-            square=True)
-plt.title("Correlations Among Features", y = 1.03,fontsize = 20, pad = 40);
+n = size(corr_df, 1)
+
+fig = Makie.Figure()
+ax = Makie.Axis(fig[1, 1], 
+    title = "Correlaciones Entre Variables",  
+    xticks=((1:n), DF.names(corr_df)), 
+    yticks=((1:n), DF.names(corr_df)),
+)
+
+hm = Makie.heatmap!(ax, (1:n), (1:n), corr_matrix, colormap="RdBu")
+
+for i in 1:n
+    for j in 1:n
+        text_val = corr_matrix[j, i]
+        
+        Makie.text!(ax, i, j, 
+            text = string(round(text_val, digits=2)),
+            color = abs(text_val) > 0.5 ? :white : :black,
+            fontsize = 10,
+            align = (:center, :center)
+        )
+    end
+end
+
+Makie.Colorbar(fig[1, 2], hm, 
+    label = "Coeficiente de Correlación",
+)
+
+fig
 ```
 
 #### Positive Correlation Features:
@@ -1296,16 +1249,13 @@ Onc thing we can do is try to set up the Null and Alternative Hypothesis in such
 Let's take a random sample and see the difference.
 
 ```{julia}
-#| _kg_hide-input: true
-#| _uuid: abd034cffc591bf1ef2b4a8ed3e5a65eb133d61e
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.771771Z', iopub.status.busy: '2021-06-26T16:35:15.771345Z', iopub.status.idle: '2021-06-26T16:35:15.783362Z', shell.execute_reply: '2021-06-26T16:35:15.782301Z', shell.execute_reply.started: '2021-06-26T16:35:15.771603Z'}
-male_mean = train[train['Sex'] == 1].Survived.mean()
+male_mean = DF.mean(train[train.Sex .== 1, :Survived])
+female_mean = DF.mean(train[train.Sex .== 0, :Survived])
 
-female_mean = train[train['Sex'] == 0].Survived.mean()
-print ("Male survival mean: " + str(male_mean))
-print ("female survival mean: " + str(female_mean))
+println("Male survival mean: ", male_mean)
+println("Female survival mean: ", female_mean)
+println("The mean difference between male and female survival rate: ", female_mean - male_mean)
 
-print ("The mean difference between male and female survival rate: " + str(female_mean - male_mean))
 ```
 
 Now, we have to understand that those two means are not **the population mean ($\bar{\mu}$)**. _The population mean is a statistical term statistician uses to indicate the actual average of the entire group. The group can be any gathering of multiple numbers such as animal, human, plants, money, stocks._ For example, To find the age population mean of Bulgaria; we will have to account for every single person's age and take their age. Which is almost impossible and if we were to go that route; there is no point of doing statistics in the first place. Therefore we approach this problem using sample sets. The idea of using sample set is that; if we take multiple samples of the same population and take the mean of them and put them in a distribution; eventually the distribution start to look more like a **normal distribution**. The more samples we take and the more sample means will be added and, the closer the normal distribution will reach towards population mean. This is where **Central limit theory** comes from. We will go more in depth of this topic later on.
@@ -1313,25 +1263,27 @@ Now, we have to understand that those two means are not **the population mean ($
 Going back to our dataset, like we are saying these means above are part of the whole story. We were given part of the data to train our machine learning models, and the other part of the data was held back for testing. Therefore, It is impossible for us at this point to know the population means of survival for male and females. Situation like this calls for a statistical approach. We will use the sampling distribution approach to do the test. let's take 50 random sample of male and female from our train data.
 
 ```{julia}
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.785359Z', iopub.status.busy: '2021-06-26T16:35:15.784861Z', iopub.status.idle: '2021-06-26T16:35:15.815921Z', shell.execute_reply: '2021-06-26T16:35:15.815302Z', shell.execute_reply.started: '2021-06-26T16:35:15.785103Z'}
-# separating male and female dataframe.
-import random
-male = train[train['Sex'] == 1]
-female = train[train['Sex'] == 0]
+male = train[train.Sex .== 1, :]
+female = train[train.Sex .== 0, :]
 
-## empty list for storing mean sample
-m_mean_samples = []
-f_mean_samples = []
+# Listas vacías para almacenar las muestras de medias
+m_mean_samples = Float64[]
+f_mean_samples = Float64[]
 
-for i in range(50):
-    m_mean_samples.append(np.mean(random.sample(list(male['Survived']),50,)))
-    f_mean_samples.append(np.mean(random.sample(list(female['Survived']),50,)))
+# Generar 50 muestras aleatorias
+for i in 1:50
+    # Muestreo aleatorio de 50 elementos sin reemplazo
+    male_sample = StatsBase.sample(male.Survived, 50, replace=false)
+    female_sample = StatsBase.sample(female.Survived, 50, replace=false)
+    
+    push!(m_mean_samples, DF.mean(male_sample))
+    push!(f_mean_samples, DF.mean(female_sample))
+end
 
-
-# Print them out
-print (f"Male mean sample mean: {round(np.mean(m_mean_samples),2)}")
-print (f"Male mean sample mean: {round(np.mean(f_mean_samples),2)}")
-print (f"Difference between male and female mean sample mean: {round(np.mean(f_mean_samples) - np.mean(m_mean_samples),2)}")
+println("Male mean sample mean: ", round(DF.mean(m_mean_samples), digits=2))
+println("Female mean sample mean: ", round(DF.mean(f_mean_samples), digits=2))
+println("Difference between male and female mean sample mean: ", 
+        round(DF.mean(f_mean_samples) - DF.mean(m_mean_samples), digits=2))
 ```
 
 H0: male mean is greater or equal to female mean<br>
@@ -1396,43 +1348,25 @@ Feature Engineering is exactly what its sounds like. Sometimes we want to create
 **_Creating a new feature "name_length" that will take the count of letters of each name_**
 
 ```{julia}
-#| _cell_guid: d30d71c1-55bc-41c8-8536-9909d9f02538
-#| _kg_hide-input: true
-#| _uuid: cb17c6f59bb2123cbf2cbc9c282b4d70ee283a86
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.817993Z', iopub.status.busy: '2021-06-26T16:35:15.817477Z', iopub.status.idle: '2021-06-26T16:35:15.832377Z', shell.execute_reply: '2021-06-26T16:35:15.831471Z', shell.execute_reply.started: '2021-06-26T16:35:15.817745Z'}
-# Creating a new colomn with a
-train['name_length'] = [len(i) for i in train.Name]
-test['name_length'] = [len(i) for i in test.Name]
+train[!, :name_length] = [length(i) for i in train.Name]
+test[!, :name_length] = [length(i) for i in test.Name]
 
-def name_length_group(size):
-    a = ''
-    if (size <=20):
-        a = 'short'
-    elif (size <=35):
-        a = 'medium'
-    elif (size <=45):
-        a = 'good'
-    else:
-        a = 'long'
+function name_length_group(size)
+    a = ""
+    if size <= 20
+        a = "short"
+    elseif size <= 35
+        a = "medium"
+    elseif size <= 45
+        a = "good"
+    else
+        a = "long"
+    end
     return a
+end
 
-
-train['nLength_group'] = train['name_length'].map(name_length_group)
-test['nLength_group'] = test['name_length'].map(name_length_group)
-
-## Here "map" is python's built-in function.
-## "map" function basically takes a function and
-## returns an iterable list/tuple or in this case series.
-## However,"map" can also be used like map(function) e.g. map(name_length_group)
-## or map(function, iterable{list, tuple}) e.g. map(name_length_group, train[feature]]).
-## However, here we don't need to use parameter("size") for name_length_group because when we
-## used the map function like ".map" with a series before dot, we are basically hinting that series
-## and the iterable. This is similar to .append approach in python. list.append(a) meaning applying append on list.
-
-
-## cuts the column by given bins based on the range of name_length
-#group_names = ['short', 'medium', 'good', 'long']
-#train['name_len_group'] = pd.cut(train['name_length'], bins = 4, labels=group_names)
+train[!, :nLength_group] = [name_length_group(x) for x in train.name_length]
+test[!, :nLength_group] = [name_length_group(x) for x in test.name_length]
 ```
 
 ## title
@@ -1440,53 +1374,42 @@ test['nLength_group'] = test['name_length'].map(name_length_group)
 **Getting the title of each name as a new feature. **
 
 ```{julia}
-#| _cell_guid: ded64d5f-43de-4a9e-b9c5-ec4d2869387a
-#| _kg_hide-input: true
-#| _uuid: 9c23229f7d06a1303a04b4a81c927453686ffec9
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.833953Z', iopub.status.busy: '2021-06-26T16:35:15.833501Z', iopub.status.idle: '2021-06-26T16:35:15.842414Z', shell.execute_reply: '2021-06-26T16:35:15.841468Z', shell.execute_reply.started: '2021-06-26T16:35:15.83376Z'}
-## get the title from the name
-train["title"] = [i.split('.')[0] for i in train.Name]
-train["title"] = [i.split(',')[1] for i in train.title]
-## Whenever we split like that, there is a good change that we will end up with while space around our string values. Let's check that.
+train[!, :title] = [split(i, '.')[1] for i in train.Name]
+train[!, :title] = [split(i, ',')[2] for i in train.title]
 ```
 
 ```{julia}
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.84422Z', iopub.status.busy: '2021-06-26T16:35:15.843818Z', iopub.status.idle: '2021-06-26T16:35:15.853522Z', shell.execute_reply: '2021-06-26T16:35:15.852642Z', shell.execute_reply.started: '2021-06-26T16:35:15.84407Z'}
-print(train.title.unique())
+println(unique(train.title))
 ```
 
 ```{julia}
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.855322Z', iopub.status.busy: '2021-06-26T16:35:15.854858Z', iopub.status.idle: '2021-06-26T16:35:15.86306Z', shell.execute_reply: '2021-06-26T16:35:15.86222Z', shell.execute_reply.started: '2021-06-26T16:35:15.855101Z'}
 ## Let's fix that
-train.title = train.title.apply(lambda x: x.strip())
+train[!, :title] = [strip(x) for x in train.title]
 ```
 
 ```{julia}
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.864826Z', iopub.status.busy: '2021-06-26T16:35:15.864362Z', iopub.status.idle: '2021-06-26T16:35:15.872663Z', shell.execute_reply: '2021-06-26T16:35:15.871817Z', shell.execute_reply.started: '2021-06-26T16:35:15.864612Z'}
-## We can also combile all three lines above for test set here
-test['title'] = [i.split('.')[0].split(',')[1].strip() for i in test.Name]
 
+## We can also combile all three lines above for test set here
+test[!, :title] = [strip(split(split(i, '.')[1], ',')[2]) for i in test.Name]
 ## However it is important to be able to write readable code, and the line above is not so readable.
 ```
 
 ```{julia}
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.874489Z', iopub.status.busy: '2021-06-26T16:35:15.873918Z', iopub.status.idle: '2021-06-26T16:35:15.896665Z', shell.execute_reply: '2021-06-26T16:35:15.895832Z', shell.execute_reply.started: '2021-06-26T16:35:15.874258Z'}
 ## Let's replace some of the rare values with the keyword 'rare' and other word choice of our own.
 ## train Data
-train["title"] = [i.replace('Ms', 'Miss') for i in train.title]
-train["title"] = [i.replace('Mlle', 'Miss') for i in train.title]
-train["title"] = [i.replace('Mme', 'Mrs') for i in train.title]
-train["title"] = [i.replace('Dr', 'rare') for i in train.title]
-train["title"] = [i.replace('Col', 'rare') for i in train.title]
-train["title"] = [i.replace('Major', 'rare') for i in train.title]
-train["title"] = [i.replace('Don', 'rare') for i in train.title]
-train["title"] = [i.replace('Jonkheer', 'rare') for i in train.title]
-train["title"] = [i.replace('Sir', 'rare') for i in train.title]
-train["title"] = [i.replace('Lady', 'rare') for i in train.title]
-train["title"] = [i.replace('Capt', 'rare') for i in train.title]
-train["title"] = [i.replace('the Countess', 'rare') for i in train.title]
-train["title"] = [i.replace('Rev', 'rare') for i in train.title]
-
+train[!, :title] = [replace(i, "Ms" => "Miss") for i in train.title]
+train[!, :title] = [replace(i, "Mlle" => "Miss") for i in train.title]
+train[!, :title] = [replace(i, "Mme" => "Mrs") for i in train.title]
+train[!, :title] = [replace(i, "Dr" => "rare") for i in train.title]
+train[!, :title] = [replace(i, "Col" => "rare") for i in train.title]
+train[!, :title] = [replace(i, "Major" => "rare") for i in train.title]
+train[!, :title] = [replace(i, "Don" => "rare") for i in train.title]
+train[!, :title] = [replace(i, "Jonkheer" => "rare") for i in train.title]
+train[!, :title] = [replace(i, "Sir" => "rare") for i in train.title]
+train[!, :title] = [replace(i, "Lady" => "rare") for i in train.title]
+train[!, :title] = [replace(i, "Capt" => "rare") for i in train.title]
+train[!, :title] = [replace(i, "the Countess" => "rare") for i in train.title]
+train[!, :title] = [replace(i, "Rev" => "rare") for i in train.title]
 
 ## Now in programming there is a term called DRY(Don't repeat yourself), whenever we are repeating
 ## same code over and over again, there should be a light-bulb turning on in our head and make us think
@@ -1495,32 +1418,32 @@ train["title"] = [i.replace('Rev', 'rare') for i in train.title]
 ```
 
 ```{julia}
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.900031Z', iopub.status.busy: '2021-06-26T16:35:15.899771Z', iopub.status.idle: '2021-06-26T16:35:15.910036Z', shell.execute_reply: '2021-06-26T16:35:15.908929Z', shell.execute_reply.started: '2021-06-26T16:35:15.899989Z'}
+
 ## we are writing a function that can help us modify title column
-def name_converted(feature):
-    """
+"""
     This function helps modifying the title column
-    """
-
-    result = ''
-    if feature in ['the Countess','Capt','Lady','Sir','Jonkheer','Don','Major','Col', 'Rev', 'Dona', 'Dr']:
-        result = 'rare'
-    elif feature in ['Ms', 'Mlle']:
-        result = 'Miss'
-    elif feature == 'Mme':
-        result = 'Mrs'
-    else:
+"""
+function name_converted(feature)
+    result = ""
+    if feature in ["the Countess", "Capt", "Lady", "Sir", "Jonkheer", "Don", "Major", "Col", "Rev", "Dona", "Dr"]
+        result = "rare"
+    elseif feature in ["Ms", "Mlle"]
+        result = "Miss"
+    elseif feature == "Mme"
+        result = "Mrs"
+    else
         result = feature
+    end
     return result
+end
 
-test.title = test.title.map(name_converted)
-train.title = train.title.map(name_converted)
+test[!, :title] = [name_converted(x) for x in test.title]
+train[!, :title] = [name_converted(x) for x in train.title];
 ```
 
 ```{julia}
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.912187Z', iopub.status.busy: '2021-06-26T16:35:15.911644Z', iopub.status.idle: '2021-06-26T16:35:15.923512Z', shell.execute_reply: '2021-06-26T16:35:15.922507Z', shell.execute_reply.started: '2021-06-26T16:35:15.912136Z'}
-print(train.title.unique())
-print(test.title.unique())
+println(unique(train.title))
+println(unique(test.title))
 ```
 
 ## family_size
@@ -1528,121 +1451,94 @@ print(test.title.unique())
 **_Creating a new feature called "family_size"._**
 
 ```{julia}
-#| _cell_guid: 7083a7e7-d1d5-4cc1-ad67-c454b139f5f1
-#| _kg_hide-input: true
-#| _uuid: cdfd54429cb235dd3b73535518950b2e515e54f2
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.925581Z', iopub.status.busy: '2021-06-26T16:35:15.925033Z', iopub.status.idle: '2021-06-26T16:35:15.933955Z', shell.execute_reply: '2021-06-26T16:35:15.933137Z', shell.execute_reply.started: '2021-06-26T16:35:15.925315Z'}
 ## Family_size seems like a good feature to create
-train['family_size'] = train.SibSp + train.Parch+1
-test['family_size'] = test.SibSp + test.Parch+1
+train[!, :family_size] = train.SibSp + train.Parch .+ 1
+test[!, :family_size] = test.SibSp + test.Parch .+ 1
 ```
 
 ```{julia}
-#| _cell_guid: 3d471d07-7735-4aab-8b26-3f26e481dc49
-#| _kg_hide-input: true
-#| _uuid: 2e23467af7a2e85fcaa06b52b303daf2e5e44250
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.935971Z', iopub.status.busy: '2021-06-26T16:35:15.935422Z', iopub.status.idle: '2021-06-26T16:35:15.942647Z', shell.execute_reply: '2021-06-26T16:35:15.941882Z', shell.execute_reply.started: '2021-06-26T16:35:15.935671Z'}
 ## bin the family size.
-def family_group(size):
-    """
-    This funciton groups(loner, small, large) family based on family size
-    """
-
-    a = ''
-    if (size <= 1):
-        a = 'loner'
-    elif (size <= 4):
-        a = 'small'
-    else:
-        a = 'large'
+"""
+This function groups(loner, small, large) family based on family size
+"""
+function family_group(size)
+    a = ""
+    if size <= 1
+        a = "loner"
+    elseif size <= 4
+        a = "small"
+    else
+        a = "large"
+    end
     return a
+end
 ```
 
 ```{julia}
-#| _cell_guid: 82f3cf5a-7e8d-42c3-a06b-56e17e890358
-#| _kg_hide-input: true
-#| _uuid: 549239812f919f5348da08db4264632d2b21b587
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.944511Z', iopub.status.busy: '2021-06-26T16:35:15.94417Z', iopub.status.idle: '2021-06-26T16:35:15.95416Z', shell.execute_reply: '2021-06-26T16:35:15.953395Z', shell.execute_reply.started: '2021-06-26T16:35:15.944448Z'}
+
 ## apply the family_group function in family_size
-train['family_group'] = train['family_size'].map(family_group)
-test['family_group'] = test['family_size'].map(family_group)
+train[!, :family_group] = [family_group(x) for x in train.family_size]
+test[!, :family_group] = [family_group(x) for x in test.family_size];
+
 ```
 
 ## is_alone
 
 ```{julia}
-#| _cell_guid: 298b28d6-75a7-4e49-b1c3-7755f1727327
-#| _kg_hide-input: true
-#| _uuid: 45315bb62f69e94e66109e7da06c6c5ade578398
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.956031Z', iopub.status.busy: '2021-06-26T16:35:15.955569Z', iopub.status.idle: '2021-06-26T16:35:15.964779Z', shell.execute_reply: '2021-06-26T16:35:15.963853Z', shell.execute_reply.started: '2021-06-26T16:35:15.955855Z'}
-train['is_alone'] = [1 if i<2 else 0 for i in train.family_size]
-test['is_alone'] = [1 if i<2 else 0 for i in test.family_size]
+train[!, :is_alone] = [i < 2 ? 1 : 0 for i in train.family_size]
+test[!, :is_alone] = [i < 2 ? 1 : 0 for i in test.family_size];
+
 ```
 
 ## ticket
 
 ```{julia}
-#| _cell_guid: 352c794d-728d-44de-9160-25da7abe0c06
-#| _kg_hide-input: true
-#| _uuid: 5b99e1f7d7757f11e6dd6dbc627f3bd6e2fbd874
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.966936Z', iopub.status.busy: '2021-06-26T16:35:15.9664Z', iopub.status.idle: '2021-06-26T16:35:15.97799Z', shell.execute_reply: '2021-06-26T16:35:15.976969Z', shell.execute_reply.started: '2021-06-26T16:35:15.966816Z'}
-train.Ticket.value_counts().sample(10)
+
+println(StatsBase.sample(collect(StatsBase.countmap(train.Ticket)), 10))
 ```
 
 I have yet to figureout how to best manage ticket feature. So, any suggestion would be truly appreciated. For now, I will get rid off the ticket feature.
 
 ```{julia}
-#| _kg_hide-input: true
-#| _uuid: d23d451982f0cbe44976c2eacafb726d816e9195
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.979613Z', iopub.status.busy: '2021-06-26T16:35:15.979155Z', iopub.status.idle: '2021-06-26T16:35:15.989456Z', shell.execute_reply: '2021-06-26T16:35:15.988913Z', shell.execute_reply.started: '2021-06-26T16:35:15.97941Z'}
-train.drop(['Ticket'], axis=1, inplace=True)
-
-test.drop(['Ticket'], axis=1, inplace=True)
+DF.select!(train, DF.Not(:Ticket))
+DF.select!(test, DF.Not(:Ticket));
 ```
 
 ## calculated_fare
 
 ```{julia}
-#| _cell_guid: adaa30fe-cb0f-4666-bf95-505f1dcce188
-#| _kg_hide-input: true
-#| _uuid: 9374a6357551a7551e71731d72f5ceb3144856df
-#| execution: {iopub.execute_input: '2021-06-26T16:35:15.991841Z', iopub.status.busy: '2021-06-26T16:35:15.991313Z', iopub.status.idle: '2021-06-26T16:35:15.999545Z', shell.execute_reply: '2021-06-26T16:35:15.998734Z', shell.execute_reply.started: '2021-06-26T16:35:15.991562Z'}
 ## Calculating fare based on family size.
-train['calculated_fare'] = train.Fare/train.family_size
-test['calculated_fare'] = test.Fare/test.family_size
+train[!, :calculated_fare] = train.Fare ./ train.family_size
+test[!, :calculated_fare] = test.Fare ./ test.family_size;
 ```
 
 Some people have travelled in groups like family or friends. It seems like Fare column kept a record of the total fare rather than the fare of individual passenger, therefore calculated fare will be much handy in this situation.
 
 ## fare_group
 
+
 ```{julia}
-#| _cell_guid: 8c33b78c-14cb-4cc2-af0f-65079a741570
-#| _kg_hide-input: true
-#| _uuid: 35685a6ca28651eab389c4673c21da2ea5ba4187
-#| execution: {iopub.execute_input: '2021-06-26T16:35:16.001667Z', iopub.status.busy: '2021-06-26T16:35:16.001088Z', iopub.status.idle: '2021-06-26T16:35:16.012304Z', shell.execute_reply: '2021-06-26T16:35:16.011542Z', shell.execute_reply.started: '2021-06-26T16:35:16.00135Z'}
-def fare_group(fare):
-    """
+"""
     This function creates a fare group based on the fare provided
     """
-
-    a= ''
-    if fare <= 4:
-        a = 'Very_low'
-    elif fare <= 10:
-        a = 'low'
-    elif fare <= 20:
-        a = 'mid'
-    elif fare <= 45:
-        a = 'high'
-    else:
+function fare_group(fare::Float64)
+    a = ""
+    if fare <= 4
+        a = "Very_low"
+    elseif fare <= 10
+        a = "low"
+    elseif fare <= 20
+        a = "mid"
+    elseif fare <= 45
+        a = "high"
+    else
         a = "very_high"
+    end
     return a
+end
 
-train['fare_group'] = train['calculated_fare'].map(fare_group)
-test['fare_group'] = test['calculated_fare'].map(fare_group)
-
-#train['fare_group'] = pd.cut(train['calculated_fare'], bins = 4, labels=groups)
+train[!, :fare_group] = [fare_group(x) for x in train.calculated_fare]
+test[!, :fare_group] = [fare_group(x) for x in test.calculated_fare];
 ```
 
 Fare group was calculated based on <i>calculated_fare</i>. This can further help our cause.
@@ -1652,11 +1548,8 @@ Fare group was calculated based on <i>calculated_fare</i>. This can further help
 It seems like <i>PassengerId</i> column only works as an id in this dataset without any significant effect on the dataset. Let's drop it.
 
 ```{julia}
-#| _uuid: dadea67801cf5b56a882aa96bb874a4afa0e0bec
-#| execution: {iopub.execute_input: '2021-06-26T16:35:16.014434Z', iopub.status.busy: '2021-06-26T16:35:16.013951Z', iopub.status.idle: '2021-06-26T16:35:16.025524Z', shell.execute_reply: '2021-06-26T16:35:16.024631Z', shell.execute_reply.started: '2021-06-26T16:35:16.014266Z'}
-train.drop(['PassengerId'], axis=1, inplace=True)
-
-test.drop(['PassengerId'], axis=1, inplace=True)
+DF.select!(train, DF.Not(:PassengerId))
+DF.select!(test, DF.Not(:PassengerId))
 ```
 
 ## Creating dummy variables
@@ -1666,77 +1559,104 @@ You might be wondering what is a dummy variable?
 Dummy variable is an important **prepocessing machine learning step**. Often times Categorical variables are an important features, which can be the difference between a good model and a great model. While working with a dataset, having meaningful value for example, "male" or "female" instead of 0's and 1's is more intuitive for us. However, machines do not understand the value of categorical values, for example, in this dataset we have gender male or female, algorithms do not accept categorical variables as input. In order to feed data in a machine learning model, we
 
 ```{julia}
-#| _cell_guid: 9243ac8c-be44-46d0-a0ca-ee5f19b89bd4
-#| _kg_hide-input: true
-#| _uuid: 7b8db3930fb1bfb91db16686223dfc6d8e77744d
-#| execution: {iopub.execute_input: '2021-06-26T16:35:16.027132Z', iopub.status.busy: '2021-06-26T16:35:16.026701Z', iopub.status.idle: '2021-06-26T16:35:16.059319Z', shell.execute_reply: '2021-06-26T16:35:16.058745Z', shell.execute_reply.started: '2021-06-26T16:35:16.027081Z'}
+function get_dummies(df, columns)
+    """
+    Creates categorical one hot encoding variables
+    """
+    result_df = copy(df)
+    
+    for col in columns
+        unique_vals = unique(skipmissing(result_df[!, col]))
+        
+        dummy_transforms = [@. col => DF.ByRow(isequal(val)) => Symbol(col, "_", val) for val in unique_vals]
+        
+        DF.transform!(result_df, dummy_transforms...)
+        DF.select!(result_df, DF.Not(col))
 
-train = pd.get_dummies(train, columns=['title',"Pclass", 'Cabin','Embarked','nLength_group', 'family_group', 'fare_group'], drop_first=False)
-test = pd.get_dummies(test, columns=['title',"Pclass",'Cabin','Embarked','nLength_group', 'family_group', 'fare_group'], drop_first=False)
-train.drop(['family_size','Name', 'Fare','name_length'], axis=1, inplace=True)
-test.drop(['Name','family_size',"Fare",'name_length'], axis=1, inplace=True)
+    end
+    
+    return result_df
+end
+
+dummy_cols = [:title, :Pclass, :Cabin, :Embarked, :nLength_group, :family_group, :fare_group]
+train = get_dummies(train, dummy_cols)
+test = get_dummies(test, dummy_cols);
 ```
+
+```{julia}
+cols_to_drop = [:family_size, :Name, :Fare, :name_length]
+DF.select!(train, DF.Not(cols_to_drop))
+DF.select!(test, DF.Not(cols_to_drop))
+```
+
 
 ## age
 
 As I promised before, we are going to use Random forest regressor in this section to predict the missing age values. Let's do it
 
 ```{julia}
-#| execution: {iopub.execute_input: '2021-06-26T16:35:16.061141Z', iopub.status.busy: '2021-06-26T16:35:16.060714Z', iopub.status.idle: '2021-06-26T16:35:16.084728Z', shell.execute_reply: '2021-06-26T16:35:16.083793Z', shell.execute_reply.started: '2021-06-26T16:35:16.060961Z'}
-train.head()
+train[.!ismissing.(train.Age), :]
+```
+
+
+```{julia}
+Pkg.add(["DecisionTree", "MLJDecisionTreeInterface"])
+import MLJ
+import MLJModels
 ```
 
 ```{julia}
-#| _kg_hide-input: true
-#| _uuid: 9597c320c3db4db5e5c28980a28abaae7281bc61
-#| execution: {iopub.execute_input: '2021-06-26T16:35:16.086463Z', iopub.status.busy: '2021-06-26T16:35:16.086001Z', iopub.status.idle: '2021-06-26T16:35:16.096908Z', shell.execute_reply: '2021-06-26T16:35:16.095838Z', shell.execute_reply.started: '2021-06-26T16:35:16.086235Z'}
-## rearranging the columns so that I can easily use the dataframe to predict the missing age values.
-train = pd.concat([train[["Survived", "Age", "Sex","SibSp","Parch"]], train.loc[:,"is_alone":]], axis=1)
-test = pd.concat([test[["Age", "Sex"]], test.loc[:,"SibSp":]], axis=1)
+age_train_data = train[.!ismissing.(train.Age), :]
+y_train = DF.collect(age_train_data[:, :Age])
 ```
 
+
 ```{julia}
-#| _kg_hide-input: true
-#| _uuid: 91662e7b63c2361fdcf3215f130b3895154ad92d
-#| execution: {iopub.execute_input: '2021-06-26T16:35:16.098683Z', iopub.status.busy: '2021-06-26T16:35:16.098263Z', iopub.status.idle: '2021-06-26T16:35:22.704889Z', shell.execute_reply: '2021-06-26T16:35:22.704165Z', shell.execute_reply.started: '2021-06-26T16:35:16.098504Z'}
-## Importing RandomForestRegressor
-from sklearn.ensemble import RandomForestRegressor
+function completing_age(df::DF.DataFrame)
+    #Prepare data
+    age_train_data = df[.!ismissing.(df.Age), :]
+    age_test_data = df[ismissing.(df.Age), :]
 
-## writing a function that takes a dataframe with missing values and outputs it by filling the missing values.
-def completing_age(df):
-    ## gettting all the features except survived
-    age_df = df.loc[:,"Age":]
+    features_to_exclude = [:Age]
 
-    temp_train = age_df.loc[age_df.Age.notnull()] ## df with age values
-    temp_test = age_df.loc[age_df.Age.isnull()] ## df without age values
+    # exclude "survived" from train 
+    if ("Survived" in DF.names(df))
+        push!(features_to_exclude, :Survived)
+    end
 
-    y = temp_train.Age.values ## setting target variables(age) in y
-    x = temp_train.loc[:, "Sex":].values
+    # data prepared from train
+    X_train = DF.select(age_train_data, DF.Not(features_to_exclude))
+    y_train = DF.collect(age_train_data.Age)
 
-    rfr = RandomForestRegressor(n_estimators=1500, n_jobs=-1)
-    rfr.fit(x, y)
+    
+    # data prepared from test
+    X_test = DF.select(age_test_data, DF.Not(features_to_exclude))
 
-    predicted_age = rfr.predict(temp_test.loc[:, "Sex":])
 
-    df.loc[df.Age.isnull(), "Age"] = predicted_age
+    # model
+    DecisionTreeRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
+    model = DecisionTreeRegressor()
+    mach = MLJ.machine(model, X_train, y_train)
+    MLJ.fit!(mach)
 
+    y_hat = MLJ.predict(mach, X_test)
+
+    # fill out missing values with prediction
+    df[ismissing.(df.Age), :Age] = y_hat
 
     return df
+end
+```
 
-## Implementing the completing_age function in both train and test dataset.
+```{julia}
 completing_age(train)
-completing_age(test);
+completing_age(test)
 ```
 
 Let's take a look at the histogram of the age column.
 
 ```{julia}
-#| _kg_hide-input: true
-#| _uuid: 8fc55e4670061d46dab3cc6585b3cc71eb996868
-#| execution: {iopub.execute_input: '2021-06-26T16:35:22.708567Z', iopub.status.busy: '2021-06-26T16:35:22.708283Z', iopub.status.idle: '2021-06-26T16:35:23.194075Z', shell.execute_reply: '2021-06-26T16:35:23.193419Z', shell.execute_reply.started: '2021-06-26T16:35:22.708515Z'}
-## Let's look at the his
-plt.subplots(figsize = (22,10),)
-sns.distplot(train.Age, bins = 100, kde = True, rug = False, norm_hist=False);
+Makie.hist( train.Age, bins=100)
 ```
 
 ## age_group
@@ -1744,44 +1664,45 @@ sns.distplot(train.Age, bins = 100, kde = True, rug = False, norm_hist=False);
 We can create a new feature by grouping the "Age" column
 
 ```{julia}
-#| _cell_guid: 3140c968-6755-42ec-aa70-d30c0acede1e
-#| _kg_hide-input: true
-#| _uuid: c3bd77bb4d9d5411aa696a605be127db181d2a67
-#| execution: {iopub.execute_input: '2021-06-26T16:35:23.196215Z', iopub.status.busy: '2021-06-26T16:35:23.195696Z', iopub.status.idle: '2021-06-26T16:35:23.219708Z', shell.execute_reply: '2021-06-26T16:35:23.218664Z', shell.execute_reply.started: '2021-06-26T16:35:23.195943Z'}
-## create bins for age
-def age_group_fun(age):
-    """
+ """
     This function creates a bin for age
     """
-    a = ''
-    if age <= 1:
-        a = 'infant'
-    elif age <= 4:
-        a = 'toddler'
-    elif age <= 13:
-        a = 'child'
-    elif age <= 18:
-        a = 'teenager'
-    elif age <= 35:
-        a = 'Young_Adult'
-    elif age <= 45:
-        a = 'adult'
-    elif age <= 55:
-        a = 'middle_aged'
-    elif age <= 65:
-        a = 'senior_citizen'
-    else:
-        a = 'old'
+function age_group_fun(age::Float64)
+    a = ""
+    if age <= 1
+        a = "infant"
+    elseif age <= 4
+        a = "toddler"
+    elseif age <= 13
+        a = "child"
+    elseif age <= 18
+        a = "teenager"
+    elseif age <= 35
+        a = "Young_Adult"
+    elseif age <= 45
+        a = "adult"
+    elseif age <= 55
+        a = "middle_aged"
+    elseif age <= 65
+        a = "senior_citizen"
+    else
+        a = "old"
+    end
     return a
+end
 
-## Applying "age_group_fun" function to the "Age" column.
-train['age_group'] = train['Age'].map(age_group_fun)
-test['age_group'] = test['Age'].map(age_group_fun)
+```
+
+```{julia}
+
+train[!, :age_group] = [age_group_fun(x) for x in train.Age]
+test[!, :age_group] = [age_group_fun(x) for x in test.Age]
 
 ## Creating dummies for "age_group" feature.
-train = pd.get_dummies(train,columns=['age_group'], drop_first=True)
-test = pd.get_dummies(test,columns=['age_group'], drop_first=True);
+train = get_dummies(train, [:age_group])
+test = get_dummies(test, [:age_group])
 ```
+
 
 <div class="alert alert-danger">
 <h1>Need to paraphrase this section</h1>
@@ -1813,13 +1734,9 @@ Before we apply any machine learning models, It is important to separate depende
 P.S. In our test dataset, we do not have a dependent variable feature. We are to predict that using machine learning models.
 
 ```{julia}
-#| _cell_guid: dcb0934f-8e3f-40b6-859e-abf70b0b074e
-#| _kg_hide-input: true
-#| _uuid: 607db6be6dfacc7385e5adcc0feeee28c50c99c5
-#| execution: {iopub.execute_input: '2021-06-26T16:35:23.221875Z', iopub.status.busy: '2021-06-26T16:35:23.221297Z', iopub.status.idle: '2021-06-26T16:35:23.229845Z', shell.execute_reply: '2021-06-26T16:35:23.228853Z', shell.execute_reply.started: '2021-06-26T16:35:23.221578Z'}
 # separating our independent and dependent variable
-X = train.drop(['Survived'], axis = 1)
-y = train["Survived"]
+X = DF.select(train, DF.Not(:Survived))
+y = train.Survived;
 ```
 
 ## 6b. Splitting the training data
@@ -1844,22 +1761,19 @@ By comparing the **outcome** of the model with **y_test**, we can determine whet
 P.S. When we use cross validation it is important to remember not to use **X_train, X_test, y_train and y_test**, rather we will use **X and y**. I will discuss more on that.
 
 ```{julia}
-#| _cell_guid: 348a5be2-5f4f-4c98-93a3-7352b6060ef4
-#| _kg_hide-input: true
-#| _uuid: 41b70e57f8e03da9910c20af89a9fa4a2aaea85b
-#| execution: {iopub.execute_input: '2021-06-26T16:35:23.231964Z', iopub.status.busy: '2021-06-26T16:35:23.23135Z', iopub.status.idle: '2021-06-26T16:35:23.240022Z', shell.execute_reply: '2021-06-26T16:35:23.239414Z', shell.execute_reply.started: '2021-06-26T16:35:23.231633Z'}
-from sklearn.model_selection import train_test_split
-X_train, X_test, y_train, y_test = train_test_split(X, y,test_size = .33, random_state=0)
+using Random
+Random.seed!(0)
+
+(X_train, X_test), (y_train, y_test) = MLJ.partition((X, y), 0.67, shuffle=true, multi=true)
+
 ```
 
 ```{julia}
-#| execution: {iopub.execute_input: '2021-06-26T16:35:23.242734Z', iopub.status.busy: '2021-06-26T16:35:23.24208Z', iopub.status.idle: '2021-06-26T16:35:23.250654Z', shell.execute_reply: '2021-06-26T16:35:23.249893Z', shell.execute_reply.started: '2021-06-26T16:35:23.242373Z'}
-len(X_train)
+size(X_train)
 ```
 
 ```{julia}
-#| execution: {iopub.execute_input: '2021-06-26T16:35:23.260997Z', iopub.status.busy: '2021-06-26T16:35:23.260779Z', iopub.status.idle: '2021-06-26T16:35:23.265643Z', shell.execute_reply: '2021-06-26T16:35:23.264688Z', shell.execute_reply.started: '2021-06-26T16:35:23.260954Z'}
-len(X_test)
+size(X_test)
 ```
 
 ## 6c. Feature Scaling
@@ -1870,11 +1784,11 @@ len(X_test)
 
 Feature scaling is an important concept of machine learning models. Often times a dataset contain features highly varying in magnitude and unit. For some machine learning models, it is not a problem. However, for many other ones, its quite a problem. Many machine learning algorithms uses euclidian distances to calculate the distance between two points, it is quite a problem. Let's again look at a the sample of the **train** dataset below.
 
+
 ```{julia}
-#| _kg_hide-input: true
-#| _uuid: d788baa4b88106afe5b30c769a6c85a1d67a5d6c
-#| execution: {iopub.execute_input: '2021-06-26T16:35:23.26761Z', iopub.status.busy: '2021-06-26T16:35:23.267136Z', iopub.status.idle: '2021-06-26T16:35:23.295264Z', shell.execute_reply: '2021-06-26T16:35:23.294322Z', shell.execute_reply.started: '2021-06-26T16:35:23.267383Z'}
-train.sample(5)
+sample = shuffle(1:DF.nrow(X_train))[1:5] 
+X_train[sample, :]
+
 ```
 
 Here **Age** and **Calculated_fare** is much higher in magnitude compared to others machine learning features. This can create problems as many machine learning models will get confused thinking **Age** and **Calculated_fare** have higher weight than other features. Therefore, we need to do feature scaling to get a better result.
@@ -1892,21 +1806,11 @@ P.S. I am showing a sample of both before and after so that you can see how scal
 <h3><font color="$5831bc" face="Comic Sans MS">Before Scaling</font></h3>
 
 ```{julia}
-#| _kg_hide-input: true
-#| _uuid: c4011a767b1d846f2866b4573d1d6d116afe8427
-#| execution: {iopub.execute_input: '2021-06-26T16:35:23.297022Z', iopub.status.busy: '2021-06-26T16:35:23.296548Z', iopub.status.idle: '2021-06-26T16:35:23.319251Z', shell.execute_reply: '2021-06-26T16:35:23.318338Z', shell.execute_reply.started: '2021-06-26T16:35:23.296792Z'}
-headers = X_train.columns
-
-X_train.head()
+print(DF.names(X_train))
+DF.first(X_train, 5)
 ```
 
 ```{julia}
-#| _cell_guid: 5c89c54b-7f5a-4e31-9e8f-58726cef5eab
-#| _kg_hide-input: true
-#| _uuid: 182b849ba7f2b311e919cdbf83970b97736e9d98
-#| execution: {iopub.execute_input: '2021-06-26T16:35:23.320979Z', iopub.status.busy: '2021-06-26T16:35:23.320476Z', iopub.status.idle: '2021-06-26T16:35:23.331478Z', shell.execute_reply: '2021-06-26T16:35:23.33067Z', shell.execute_reply.started: '2021-06-26T16:35:23.320738Z'}
-# Feature Scaling
-## We will be using standardscaler to transform
 from sklearn.preprocessing import StandardScaler
 st_scale = StandardScaler()
 
