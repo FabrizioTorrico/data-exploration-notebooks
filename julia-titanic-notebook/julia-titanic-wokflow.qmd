@@ -19,50 +19,46 @@ format:
     include-in-header: |
       <script src="https://public.tableau.com/javascripts/api/viz_v1.js"></script>
 engine: julia
-
 ---
-<img src="http://data.freehdw.com/ships-titanic-vehicles-best.jpg"  Width="800">
 
-<a id="introduction" ></a><br>
-This kernel is for all aspiring data scientists to learn from and to review their knowledge. We will have a detailed statistical analysis of Titanic data set along with Machine learning model implementation. I am super excited to share my first kernel with the Kaggle community. As I go on in this journey and learn new topics, I will incorporate them with each new updates. So, check for them and please <b>leave a comment</b> if you have any suggestions to make this kernel better!! Going back to the topics of this kernel, I will do more in-depth visualizations to explain the data, and the machine learning classifiers will be used to predict passenger survival status.
+<img src="http://data.freehdw.com/ships-titanic-vehicles-best.jpg" width="800"/>
 
+<a id="introduction" ></a><br> This kernel is for all aspiring data scientists to learn from and to review their knowledge. We will have a detailed statistical analysis of Titanic data set along with Machine learning model implementation. I am super excited to share my first kernel with the Kaggle community. As I go on in this journey and learn new topics, I will incorporate them with each new updates. So, check for them and please <b>leave a comment</b> if you have any suggestions to make this kernel better!! Going back to the topics of this kernel, I will do more in-depth visualizations to explain the data, and the machine learning classifiers will be used to predict passenger survival status.
 
 NOTE:
 
-- This is a julia translation
-- If you are reading this on github, I recommend you read this on <a href="https://www.kaggle.com/masumrumi/a-statistical-analysis-ml-workflow-of-titanic">kaggle</a>
-- Follow me on github: 
+-   This is a julia translation from the Julia original notebook: <a href="https://www.kaggle.com/masumrumi/a-statistical-analysis-ml-workflow-of-titanic">kaggle</a>
+-   If you are reading this on github, I recommend you read this on <a href="https://www.kaggle.com/masumrumi/a-statistical-analysis-ml-workflow-of-titanic">kaggle</a>
+-   Follow me on github 😉: <https://github.com/FabrizioTorrico>
 
 # Kernel Goals
 
 <a id="aboutthiskernel"></a>
 
----
+------------------------------------------------------------------------
 
 There are three primary goals of this kernel.
 
-- <b>Do a statistical analysis</b> of how some group of people was survived more than others.
-- <b>Do an exploratory data analysis(EDA)</b> of titanic with visualizations and storytelling.
-- <b>Predict</b>: Use machine learning classification models to predict the chances of passengers survival.
+-   <b>Do a statistical analysis</b> of how some group of people was survived more than others.
+-   <b>Do an exploratory data analysis(EDA)</b> of titanic with visualizations and storytelling.
+-   <b>Predict</b>: Use machine learning classification models to predict the chances of passengers survival.
 
 P.S. If you want to learn more about regression models, try this [kernel](https://www.kaggle.com/masumrumi/a-stats-analysis-and-ml-workflow-of-house-pricing/edit/run/9585160).
 
 # Part 1: Importing Necessary Libraries and datasets
 
----
+------------------------------------------------------------------------
 
 <a id="import_libraries**"></a>
 
 ## 1a. Loading libraries
 
-Python is a fantastic language with a vibrant community that produces many amazing libraries. I am not a big fan of importing everything at once for the newcomers. So, I am going to introduce a few necessary libraries for now, and as we go on, we will keep unboxing new libraries when it seems appropriate.
+Julia is a fantastic language with a vibrant community that produces many amazing libraries. I am not a big fan of importing everything at once for the newcomers. So, I am going to introduce a few necessary libraries for now, and as we go on, we will keep unboxing new libraries when it seems appropriate.
 
 ```{julia}
 using Pkg
 Pkg.activate(".")
-Pkg.add(["IJulia", "DataFrames", "CSV", "CairoMakie", "StatsBase",
-         "Statistics", "MLJ", "MLJModels", "HypothesisTests",
-         "Distributions", "Missings", "CategoricalArrays", "AlgebraOfGraphics", "Chain"])
+Pkg.add(["DataFrames", "CSV", "CairoMakie", "StatsBase", "Statistics", "MLJ", "Distributions", "Chain"])
 ```
 
 ```{julia}
@@ -73,14 +69,10 @@ Pkg.add(["IJulia", "DataFrames", "CSV", "CairoMakie", "StatsBase",
 import DataFrames as DF
 import CSV
 import CairoMakie as Makie
-import AlgebraOfGraphics as AoG
 import Statistics as Stats
 import StatsBase
 import Chain: @chain
 import Random: shuffle
-import IJulia
-
-
 ```
 
 ```{julia}
@@ -91,7 +83,7 @@ readdir("./input/")
 
 <a id="load_data"></a>
 
----
+------------------------------------------------------------------------
 
 After loading the necessary modules, we need to import the datasets. Many of the business problems usually come with a tremendous amount of messy data. We extract those data from many sources. I am hoping to write about that in a different kernel. For now, we are going to work with a less complicated and quite popular machine learning dataset.
 
@@ -127,7 +119,7 @@ DF.describe(train, :eltype)
 
 <a id="glimpse"></a>
 
----
+------------------------------------------------------------------------
 
 # Train Set
 
@@ -158,74 +150,55 @@ DF.describe(test)
 
 <a id="aboutthisdataset"></a>
 
----
+------------------------------------------------------------------------
 
 The data has split into two groups:
 
-- training set (train.csv)
-- test set (test.csv)
+-   training set (train.csv)
+-   test set (test.csv)
 
-**_The training set includes our target variable(dependent variable), passenger survival status_** (also known as the ground truth from the Titanic tragedy) along with other independent features like gender, class, fare, and Pclass.
+***The training set includes our target variable(dependent variable), passenger survival status*** (also known as the ground truth from the Titanic tragedy) along with other independent features like gender, class, fare, and Pclass.
 
-The test set should be used to see how well our model performs on unseen data. When we say unseen data, we mean that the algorithm or machine learning models have no relation to the test data. We do not want to use any part of the test data in any way to modify our algorithms; Which are the reasons why we clean our test data and train data separately. **_The test set does not provide passengers survival status_**. We are going to use our model to predict passenger survival status.
+The test set should be used to see how well our model performs on unseen data. When we say unseen data, we mean that the algorithm or machine learning models have no relation to the test data. We do not want to use any part of the test data in any way to modify our algorithms; Which are the reasons why we clean our test data and train data separately. ***The test set does not provide passengers survival status***. We are going to use our model to predict passenger survival status.
 
 Now let's go through the features and describe a little. There is a couple of different type of variables, They are...
 
----
+------------------------------------------------------------------------
 
 **Categorical:**
 
-- **Nominal**(variables that have two or more categories, but which do not have an intrinsic order.)
-  > - **Cabin**
-  > - **Embarked**(Port of Embarkation)
-            C(Cherbourg)
-            Q(Queenstown)
-            S(Southampton)
+-   **Nominal**(variables that have two or more categories, but which do not have an intrinsic order.) \> - **Cabin** \> - **Embarked**(Port of Embarkation) C(Cherbourg) Q(Queenstown) S(Southampton)
 
-- **Dichotomous**(Nominal variable with only two categories)
-  > - **Sex**
-            Female
-            Male
-- **Ordinal**(variables that have two or more categories just like nominal variables. Only the categories can also be ordered or ranked.)
-  > - **Pclass** (A proxy for socio-economic status (SES))
-            1(Upper)
-            2(Middle)
-            3(Lower)
+-   **Dichotomous**(Nominal variable with only two categories) \> - **Sex** Female Male
 
----
+-   **Ordinal**(variables that have two or more categories just like nominal variables. Only the categories can also be ordered or ranked.) \> - **Pclass** (A proxy for socio-economic status (SES)) 1(Upper) 2(Middle) 3(Lower)
+
+------------------------------------------------------------------------
 
 **Numeric:**
 
-- **Discrete**
-  > - **Passenger ID**(Unique identifing # for each passenger)
-  > - **SibSp**
-  > - **Parch**
-  > - **Survived** (Our outcome or dependent variable)
-            0
-            1
-- **Continous**
-  > - **Age**
-  > - **Fare**
+-   **Discrete** \> - **Passenger ID**(Unique identifing \# for each passenger) \> - **SibSp** \> - **Parch** \> - **Survived** (Our outcome or dependent variable) 0 1
+-   **Continous** \> - **Age** \> - **Fare**
 
----
+------------------------------------------------------------------------
 
 **Text Variable**
 
-> - **Ticket** (Ticket number for passenger.)
-> - **Name**( Name of the passenger.)
+> -   **Ticket** (Ticket number for passenger.)
+> -   **Name**( Name of the passenger.)
 
 ## 1e. Tableau Visualization of the Data
 
 <a id='tableau_visualization'></a>
 
----
+------------------------------------------------------------------------
 
 I have incorporated a tableau visualization below of the training data. This visualization...
 
-- is for us to have an overview and play around with the dataset.
-- is done without making any changes(including Null values) to any features of the dataset.
+-   is for us to have an overview and play around with the dataset.
+-   is done without making any changes(including Null values) to any features of the dataset.
 
----
+------------------------------------------------------------------------
 
 Let's get a better perspective of the dataset through this visualization.
 
@@ -239,7 +212,7 @@ We want to see how the left vertical bar changes when we filter out unique value
 
 <a id="cleaningthedata"></a>
 
----
+------------------------------------------------------------------------
 
 ## 2a. Overview
 
@@ -255,17 +228,17 @@ DF.describe(train, :nmissing, :eltype)
 
 It looks like, the features have unequal amount of data entries for every column and they have many different types of variables. This can happen for the following reasons...
 
-- We may have missing values in our features.
-- We may have categorical features.
-- We may have alphanumerical or/and text features.
+-   We may have missing values in our features.
+-   We may have categorical features.
+-   We may have alphanumerical or/and text features.
 
 ## 2b. Dealing with Missing values
 
 <a id="dealwithnullvalues"></a>
 
----
+------------------------------------------------------------------------
 
-**Missing values in _train_ dataset.**
+**Missing values in *train* dataset.**
 
 ```{julia}
 #| _kg_hide-input: true
@@ -292,7 +265,7 @@ end
 missing_percentage(train)
 ```
 
-**Missing values in _test_ set.**
+**Missing values in *test* set.**
 
 ```{julia}
 #| _cell_guid: 073ef91b-e401-47a1-9b0a-d08ad710abce
@@ -306,7 +279,7 @@ We see that in both **train**, and **test** dataset have missing values. Let's m
 
 ### Embarked feature
 
----
+------------------------------------------------------------------------
 
 ```{julia}
 #| _kg_hide-input: true
@@ -331,7 +304,7 @@ end
 percent_value_counts(train, :Embarked)
 ```
 
-It looks like there are only two null values( ~ 0.22 %) in the Embarked feature, we can replace these with the mode value "S". However, let's dig a little deeper.
+It looks like there are only two null values( \~ 0.22 %) in the Embarked feature, we can replace these with the mode value "S". However, let's dig a little deeper.
 
 **Let's see what are those two null values**
 
@@ -343,7 +316,7 @@ It looks like there are only two null values( ~ 0.22 %) in the Embarked feature,
 train[ismissing.(train.Embarked), :]
 ```
 
-We may be able to solve these two missing values by looking at other independent variables of the two raws. Both passengers paid a fare of $80, are of Pclass 1 and female Sex. Let's see how the **Fare** is distributed among all **Pclass** and **Embarked** feature values
+We may be able to solve these two missing values by looking at other independent variables of the two raws. Both passengers paid a fare of \$80, are of Pclass 1 and female Sex. Let's see how the **Fare** is distributed among all **Pclass** and **Embarked** feature values
 
 ```{julia}
 #| _cell_guid: bf257322-0c9c-4fc5-8790-87d8c94ad28a
@@ -388,7 +361,7 @@ Makie.boxplot!(ax1, train_clean.Embarked_num, train_clean.Fare,
 fig
 ```
 
-Here, in both training set and test set, the average fare closest to $80 are in the <b>C</b> Embarked values where pclass is 1. So, let's fill in the missing values as "C"
+Here, in both training set and test set, the average fare closest to \$80 are in the <b>C</b> Embarked values where pclass is 1. So, let's fill in the missing values as "C"
 
 ```{julia}
 #| _cell_guid: 2f5f3c63-d22c-483c-a688-a5ec2a477330
@@ -402,7 +375,7 @@ train.Embarked = coalesce.(train.Embarked, "C");
 
 ### Cabin Feature
 
----
+------------------------------------------------------------------------
 
 ```{julia}
 #| _cell_guid: e76cd770-b498-4444-b47a-4ac6ae63193b
@@ -414,11 +387,10 @@ println("Train Cabin missing: $(count(ismissing, train.Cabin) / DF.nrow(train))"
 println("Test Cabin missing: $(count(ismissing, test.Cabin) / DF.nrow(test))")
 ```
 
-Approximately 77% of Cabin feature is missing in the training data and 78% missing on the test data.
-We have two choices,
+Approximately 77% of Cabin feature is missing in the training data and 78% missing on the test data. We have two choices,
 
-- we can either get rid of the whole feature, or
-- we can brainstorm a little and find an appropriate way to put them in use. For example, We may say passengers with cabin record had a higher socio-economic-status then others. We may also say passengers with cabin record were more likely to be taken into consideration when loading into the boat.
+-   we can either get rid of the whole feature, or
+-   we can brainstorm a little and find an appropriate way to put them in use. For example, We may say passengers with cabin record had a higher socio-economic-status then others. We may also say passengers with cabin record were more likely to be taken into consideration when loading into the boat.
 
 Let's combine train and test data first and for now, will assign all the null values as **"N"**
 
@@ -453,7 +425,7 @@ percent_value_counts(all_data, :Cabin)
 
 So, We still haven't done any effective work to replace the null values. Let's stop for a second here and think through how we can take advantage of some of the other features here.
 
-- We can use the average of the fare column We can use pythons **_groupby_** function to get the mean fare of each cabin letter.
+-   We can use the average of the fare column We can use Julias ***groupby*** function to get the mean fare of each cabin letter.
 
 ```{julia}
 #| _kg_hide-input: true
@@ -529,7 +501,7 @@ train.Survived = survivors;
 
 ### Fare Feature
 
----
+------------------------------------------------------------------------
 
 If you have paid attention so far, you know that there is only one missing value in the fare column. Let's have it.
 
@@ -537,7 +509,7 @@ If you have paid attention so far, you know that there is only one missing value
 test[ismissing.(test.Fare), :]
 ```
 
-Here, We can take the average of the **Fare** column to fill in the NaN value. However, for the sake of learning and practicing, we will try something else. We can take the average of the values where**Pclass** is **_3_**, **Sex** is **_male_** and **Embarked** is **_S_**
+Here, We can take the average of the **Fare** column to fill in the NaN value. However, for the sake of learning and practicing, we will try something else. We can take the average of the values where**Pclass** is ***3***, **Sex** is ***male*** and **Embarked** is ***S***
 
 ```{julia}
 #| _cell_guid: e742aa76-b6f8-4882-8bd6-aa10b96f06aa
@@ -556,7 +528,7 @@ test.Fare = coalesce.(test.Fare, missing_value);
 
 ### Age Feature
 
----
+------------------------------------------------------------------------
 
 We know that the feature "Age" is the one with most missing values, let's see it in terms of percentage.
 
@@ -569,22 +541,22 @@ println("Train age missing value: $(round(count(ismissing, train.Age) / DF.nrow(
 println("Test age missing value: $(round(count(ismissing, test.Age) / DF.nrow(test) * 100, digits=2))%")
 ```
 
-We will take a different approach since **~20% data in the Age column is missing** in both train and test dataset. The age variable seems to be promising for determining survival rate. Therefore, It would be unwise to replace the missing values with median, mean or mode. We will use machine learning model Random Forest Regressor to impute missing value instead of Null value. We will keep the age column unchanged for now and work on that in the feature engineering section.
+We will take a different approach since **\~20% data in the Age column is missing** in both train and test dataset. The age variable seems to be promising for determining survival rate. Therefore, It would be unwise to replace the missing values with median, mean or mode. We will use machine learning model Random Forest Regressor to impute missing value instead of Null value. We will keep the age column unchanged for now and work on that in the feature engineering section.
 
 # Part 3. Visualization and Feature Relations
 
 <a id="visualization_and_feature_relations" ></a>
 
----
+------------------------------------------------------------------------
 
 Before we dive into finding relations between independent variables and our dependent variable(survivor), let us create some assumptions about how the relations may turn-out among features.
 
 **Assumptions:**
 
-- Gender: More female survived than male
-- Pclass: Higher socio-economic status passenger survived more than others.
-- Age: Younger passenger survived more than other passengers.
-- Fare: Passenger with higher fare survived more that other passengers. This can be quite correlated with Pclass.
+-   Gender: More female survived than male
+-   Pclass: Higher socio-economic status passenger survived more than others.
+-   Age: Younger passenger survived more than other passengers.
+-   Fare: Passenger with higher fare survived more that other passengers. This can be quite correlated with Pclass.
 
 Now, let's see how the features are related to each other by creating some visualizations.
 
@@ -592,8 +564,7 @@ Now, let's see how the features are related to each other by creating some visua
 
 <a id="gender_and_survived"></a>
 
----
-
+------------------------------------------------------------------------
 
 ```{julia}
 Makie.set_theme!(Makie.theme_light())
@@ -624,8 +595,7 @@ fig
 
 ```
 
-This bar plot above shows the distribution of female and male survived. The **_x_label_** represents **Sex** feature while the **_y_label_** represents the % of **passenger survived**. This bar plot shows that ~74% female passenger survived while only ~19% male passenger survived.
-
+This bar plot above shows the distribution of female and male survived. The ***x_label*** represents **Sex** feature while the ***y_label*** represents the % of **passenger survived**. This bar plot shows that \~74% female passenger survived while only \~19% male passenger survived.
 
 ```{julia}
 fig = Makie.Figure()
@@ -662,20 +632,20 @@ Makie.Legend(fig[1, 2],
 fig
 ```
 
-This count plot shows the actual distribution of male and female passengers that survived and did not survive. It shows that among all the females ~ 230 survived and ~ 70 did not survive. While among male passengers ~110 survived and ~480 did not survive.
+This count plot shows the actual distribution of male and female passengers that survived and did not survive. It shows that among all the females \~ 230 survived and \~ 70 did not survive. While among male passengers \~110 survived and \~480 did not survive.
 
 **Summary**
 
----
+------------------------------------------------------------------------
 
-- As we suspected, female passengers have survived at a much better rate than male passengers.
-- It seems about right since females and children were the priority.
+-   As we suspected, female passengers have survived at a much better rate than male passengers.
+-   It seems about right since females and children were the priority.
 
 ## 3b. Pclass and Survived
 
 <a id="pcalss_and_survived"></a>
 
----
+------------------------------------------------------------------------
 
 ```{julia}
 fig = Makie.Figure()
@@ -720,10 +690,10 @@ fig
 Makie.barplot([1, 2, 3], survived_percentage, axis=(xticks=(1:3, ["1st Class", "2nd Class", "3rd Class"]), title = "Passenger Class Distribution - Survived vs Non-Survived"), color=["brown", "orange", "green"])
 ```
 
-- It looks like ...
-  - ~ 63% first class passenger survived titanic tragedy, while
-  - ~ 48% second class and
-  - ~ only 24% third class passenger survived.
+-   It looks like ...
+    -   \~ 63% first class passenger survived titanic tragedy, while
+    -   \~ 48% second class and
+    -   \~ only 24% third class passenger survived.
 
 ```{julia}
 
@@ -750,7 +720,7 @@ This KDE plot is pretty self-explanatory with all the labels and colors. Somethi
 
 **Summary**
 
----
+------------------------------------------------------------------------
 
 The first class passengers had the upper hand during the tragedy. You can probably agree with me more on this, in the next section of visualizations where we look at the distribution of ticket fare and survived column.
 
@@ -758,7 +728,7 @@ The first class passengers had the upper hand during the tragedy. You can probab
 
 <a id="fare_and_survived"></a>
 
----
+------------------------------------------------------------------------
 
 ```{julia}
 fig = Makie.Figure()
@@ -781,20 +751,20 @@ fig
 
 This plot shows something impressive..
 
-- The spike in the plot under 100 dollar represents that a lot of passengers who bought the ticket within that range did not survive.
-- When fare is approximately more than 280 dollars, there is no gray shade which means, either everyone passed that fare point survived or maybe there is an outlier that clouds our judgment. Let's check...
+-   The spike in the plot under 100 dollar represents that a lot of passengers who bought the ticket within that range did not survive.
+-   When fare is approximately more than 280 dollars, there is no gray shade which means, either everyone passed that fare point survived or maybe there is an outlier that clouds our judgment. Let's check...
 
 ```{julia}
 train[train.Fare .> 280, :]
 ```
 
-As we assumed, it looks like an outlier with a fare of $512. We sure can delete this point. However, we will keep it for now.
+As we assumed, it looks like an outlier with a fare of \$512. We sure can delete this point. However, we will keep it for now.
 
 ## 3d. Age and Survived
 
 <a id="age_and_survived"></a>
 
----
+------------------------------------------------------------------------
 
 ```{julia}
 
@@ -827,7 +797,7 @@ There is nothing out of the ordinary about this plot, except the very left part 
 
 <a id='combined_feature_relations'></a>
 
----
+------------------------------------------------------------------------
 
 In this section, we are going to discover more than two feature relations in a single graph. I will try my best to illustrate most of the feature relations. Let's get to it.
 
@@ -899,22 +869,22 @@ fig
 
 This is another compelling facet grid illustrating four features relationship at once. They are **Embarked, Age, Survived & Sex**.
 
-- The color illustrates passengers survival status(green represents survived, gray represents not survived)
-- The column represents Sex(left being male, right stands for female)
-- The row represents Embarked(from top to bottom: S, C, Q)
+-   The color illustrates passengers survival status(green represents survived, gray represents not survived)
+-   The column represents Sex(left being male, right stands for female)
+-   The row represents Embarked(from top to bottom: S, C, Q)
 
----
+------------------------------------------------------------------------
 
 Now that I have steered out the apparent let's see if we can get some insights that are not so obvious as we look at the data.
 
-- Most passengers seem to be boarded on Southampton(S).
-- More than 60% of the passengers died boarded on Southampton.
-- More than 60% of the passengers lived boarded on Cherbourg(C).
-- Pretty much every male that boarded on Queenstown(Q) did not survive.
-- There were very few females boarded on Queenstown, however, most of them survived.
+-   Most passengers seem to be boarded on Southampton(S).
+-   More than 60% of the passengers died boarded on Southampton.
+-   More than 60% of the passengers lived boarded on Cherbourg(C).
+-   Pretty much every male that boarded on Queenstown(Q) did not survive.
+-   There were very few females boarded on Queenstown, however, most of them survived.
 
 ```{julia}
-fig = Makie.Figure(resolution = (1000, 600))
+fig = Makie.Figure()
 
 ax_m = Makie.Axis(fig[1, 1],
     title = "Male", 
@@ -951,8 +921,8 @@ fig
 
 This facet grid unveils a couple of interesting insights. Let's find out.
 
-- The grid above clearly demonstrates the three outliers with Fare of over \$500. At this point, I think we are quite confident that these outliers should be deleted.
-- Most of the passengers were with in the Fare range of \$100.
+-   The grid above clearly demonstrates the three outliers with Fare of over \$500. At this point, I think we are quite confident that these outliers should be deleted.
+-   Most of the passengers were with in the Fare range of \$100.
 
 ```{julia}
 train = train[train.Fare .< 500, :]
@@ -1049,7 +1019,7 @@ test.Sex = [sex == "female" ? 0 : 1 for sex in test.Sex];
 
 <a id="statisticaloverview"></a>
 
----
+------------------------------------------------------------------------
 
 ![title](https://cdn-images-1.medium.com/max/400/1*hFJ-LI7IXcWpxSLtaC0dfg.png)
 
@@ -1090,16 +1060,16 @@ end
 
 I have gathered a small summary from the statistical overview above. Let's see what they are...
 
-- This train data set has 891 raw and 9 columns.
-- only 38% passenger survived during that tragedy.
-- ~74% female passenger survived, while only ~19% male passenger survived.
-- ~63% first class passengers survived, while only 24% lower class passenger survived.
+-   This train data set has 891 raw and 9 columns.
+-   only 38% passenger survived during that tragedy.
+-   \~74% female passenger survived, while only \~19% male passenger survived.
+-   \~63% first class passengers survived, while only 24% lower class passenger survived.
 
 ## 4a. Correlation Matrix and Heatmap
 
 <a id="heatmap"></a>
 
----
+------------------------------------------------------------------------
 
 ### Correlations
 
@@ -1112,7 +1082,6 @@ corr_df = DF.DataFrame(corr_matrix, DF.names(train_numeric))
 
 ```
 
-
 ```{julia}
 DF.sort(DF.DataFrame(
     Variable = DF.names(corr_df),
@@ -1120,8 +1089,7 @@ DF.sort(DF.DataFrame(
 ), [:Correlation], rev=true)
 ```
 
-
-** Sex is the most important correlated feature with _Survived(dependent variable)_ feature followed by Pclass.**
+\*\* Sex is the most important correlated feature with *Survived(dependent variable)* feature followed by Pclass.\*\*
 
 ```{julia}
 DF.sort(DF.DataFrame(
@@ -1131,7 +1099,6 @@ DF.sort(DF.DataFrame(
 ```
 
 **Squaring the correlation feature not only gives on positive correlations but also amplifies the relationships.**
-
 
 ```{julia}
 n = size(corr_df, 1)
@@ -1167,13 +1134,13 @@ fig
 
 #### Positive Correlation Features:
 
-- Fare and Survived: 0.26
+-   Fare and Survived: 0.26
 
 #### Negative Correlation Features:
 
-- Fare and Pclass: -0.6
-- Sex and Survived: -0.55
-- Pclass and Survived: -0.33
+-   Fare and Pclass: -0.6
+-   Sex and Survived: -0.55
+-   Pclass and Survived: -0.33
 
 **So, Let's analyze these correlations a bit.** We have found some moderately strong relationships between different features. There is a definite positive correlation between Fare and Survived rated. This relationship reveals that the passenger who paid more money for their ticket were more likely to survive. This theory aligns with one other correlation which is the correlation between Fare and Pclass(-0.6). This relationship can be explained by saying that first class passenger(1) paid more for fare then second class passenger(2), similarly second class passenger paid more than the third class passenger(3). This theory can also be supported by mentioning another Pclass correlation with our dependent variable, Survived. The correlation between Pclass and Survived is -0.33. This can also be explained by saying that first class passenger had a better chance of surviving than the second or the third and so on.
 
@@ -1183,7 +1150,7 @@ However, the most significant correlation with our dependent variable is the Sex
 
 <a id="statistical_test"></a>
 
----
+------------------------------------------------------------------------
 
 Statistical tests are the scientific way to prove the validation of theories. In any case, when we look at the data, we seem to have an intuitive understanding of where data is leading us. However, when we do statistical tests, we get a scientific or mathematical perspective of how significant these results are. Let's apply some of these methods and see how we are doing with our predictions.
 
@@ -1193,25 +1160,25 @@ A hypothesis test compares the mean of a control group and experimental group an
 
 A **hypothesis test** usually consists of multiple parts:
 
-1. Formulate a well-developed research problem or question: The hypothesis test usually starts with a concrete and well-developed researched problem. We need to ask the right question that can be answered using statistical analysis.
-2. **The null hypothesis($H_0$) and Alternating hypothesis($H_1$)**:
-   > - The **null hypothesis($H_0$)** is something that is assumed to be true. It is the status quo. In a null hypothesis, the observations are the result of pure chance. When we set out to experiment, we form the null hypothesis by saying that there is no difference between the means of the control group and the experimental group.
-   > - An **Alternative hypothesis($H_A$)** is a claim and the opposite of the null hypothesis. It is going against the status quo. In an alternative theory, the observations show a real effect combined with a component of chance variation.
-3. Determine the **test statistic**: test statistic can be used to assess the truth of the null hypothesis. Depending on the standard deviation we either use t-statistics or z-statistics. In addition to that, we want to identify whether the test is a one-tailed test or two-tailed test. [This](https://support.minitab.com/en-us/minitab/18/help-and-how-to/statistics/basic-statistics/supporting-topics/basics/null-and-alternative-hypotheses/) article explains it pretty well. [This](https://stattrek.com/hypothesis-test/hypothesis-testing.aspx) article is pretty good as well.
+1.  Formulate a well-developed research problem or question: The hypothesis test usually starts with a concrete and well-developed researched problem. We need to ask the right question that can be answered using statistical analysis.
 
-4. Specify a **Significance level** and **Confidence Interval**: The significance level($\alpha$) is the probability of rejecting a null hypothesis when it is true. In other words, we are **_comfortable/confident_** with rejecting the null hypothesis a significant amount of times even though it is true. This considerable amount is our Significant level. In addition to that, Significance level is one minus our Confidence interval. For example, if we say, our significance level is 5%, then our confidence interval would be (1 - 0.05) = 0.95 or 95%.
+2.  **The null hypothesis(**$H_0$) and Alternating hypothesis($H_1$): \> - The **null hypothesis(**$H_0$) is something that is assumed to be true. It is the status quo. In a null hypothesis, the observations are the result of pure chance. When we set out to experiment, we form the null hypothesis by saying that there is no difference between the means of the control group and the experimental group. \> - An **Alternative hypothesis(**$H_A$) is a claim and the opposite of the null hypothesis. It is going against the status quo. In an alternative theory, the observations show a real effect combined with a component of chance variation.
 
-5. Compute the **T-Statistics/Z-Statistics**: Computing the t-statistics follows a simple equation. This equation slightly differs depending on one sample test or two sample test
+3.  Determine the **test statistic**: test statistic can be used to assess the truth of the null hypothesis. Depending on the standard deviation we either use t-statistics or z-statistics. In addition to that, we want to identify whether the test is a one-tailed test or two-tailed test. [This](https://support.minitab.com/en-us/minitab/18/help-and-how-to/statistics/basic-statistics/supporting-topics/basics/null-and-alternative-hypotheses/) article explains it pretty well. [This](https://stattrek.com/hypothesis-test/hypothesis-testing.aspx) article is pretty good as well.
 
-6. Compute the **P-value**: P-value is the probability that a test statistic at least as significant as the one observed would be obtained assuming that the null hypothesis is correct. The p-value is known to be unintuitive, and even many professors are known to explain it wrong. I think this [video](https://www.youtube.com/watch?v=E4KCfcVwzyw) explains the p-value well. **The smaller the P-value, the stronger the evidence against the null hypothesis.**
+4.  Specify a **Significance level** and **Confidence Interval**: The significance level($\alpha$) is the probability of rejecting a null hypothesis when it is true. In other words, we are ***comfortable/confident*** with rejecting the null hypothesis a significant amount of times even though it is true. This considerable amount is our Significant level. In addition to that, Significance level is one minus our Confidence interval. For example, if we say, our significance level is 5%, then our confidence interval would be (1 - 0.05) = 0.95 or 95%.
 
-7. **Describe the result and compare the p-value with the significance value($\alpha$)**: If p<=$\alpha$, then the observed effect is statistically significant, the null hypothesis is ruled out, and the alternative hypothesis is valid. However if the p> $\alpha$, we say that, we fail to reject the null hypothesis. Even though this sentence is grammatically wrong, it is logically right. We never accept the null hypothesis just because we are doing the statistical test with sample data points.
+5.  Compute the **T-Statistics/Z-Statistics**: Computing the t-statistics follows a simple equation. This equation slightly differs depending on one sample test or two sample test
+
+6.  Compute the **P-value**: P-value is the probability that a test statistic at least as significant as the one observed would be obtained assuming that the null hypothesis is correct. The p-value is known to be unintuitive, and even many professors are known to explain it wrong. I think this [video](https://www.youtube.com/watch?v=E4KCfcVwzyw) explains the p-value well. **The smaller the P-value, the stronger the evidence against the null hypothesis.**
+
+7.  **Describe the result and compare the p-value with the significance value(**$\alpha$): If p\<=$\alpha$, then the observed effect is statistically significant, the null hypothesis is ruled out, and the alternative hypothesis is valid. However if the p\> $\alpha$, we say that, we fail to reject the null hypothesis. Even though this sentence is grammatically wrong, it is logically right. We never accept the null hypothesis just because we are doing the statistical test with sample data points.
 
 We will follow each of these steps above to do your hypothesis testing below.
 
 P.S. Khan Academy has a set of videos that I think are intuative and helped me understand conceptually.
 
----
+------------------------------------------------------------------------
 
 ### Hypothesis testing for Titanic
 
@@ -1219,15 +1186,15 @@ P.S. Khan Academy has a set of videos that I think are intuative and helped me u
 
 Regarding this dataset, we can formulate the null hypothesis and alternative hypothesis by asking the following questions.
 
-> - **Is there a significant difference in the mean sex between the passenger who survived and passenger who did not survive?**.
-> - **Is there a substantial difference in the survival rate between the male and female passengers?**
+> -   **Is there a significant difference in the mean sex between the passenger who survived and passenger who did not survive?**.
+> -   **Is there a substantial difference in the survival rate between the male and female passengers?**
 
 #### The Null Hypothesis and The Alternative Hypothesis:
 
 We can formulate our hypothesis by asking questions differently. However, it is essential to understand what our end goal is. Here our dependent variable or target variable is **Survived**. Therefore, we say
 
-> ** Null Hypothesis($H_0$):** There is no difference in the survival rate between the male and female passengers. or the mean difference between male and female passenger in the survival rate is zero.  
->  ** Alternative Hypothesis($H_A$):** There is a difference in the survival rate between the male and female passengers. or the mean difference in the survival rate between male and female is not zero.
+> \*\* Null Hypothesis($H_0$):\*\* There is no difference in the survival rate between the male and female passengers. or the mean difference between male and female passenger in the survival rate is zero.\
+> \*\* Alternative Hypothesis($H_A$):\*\* There is a difference in the survival rate between the male and female passengers. or the mean difference in the survival rate between male and female is not zero.
 
 Onc thing we can do is try to set up the Null and Alternative Hypothesis in such way that, when we do our t-test, we can choose to do one tailed test. According to [this](https://support.minitab.com/en-us/minitab/18/help-and-how-to/statistics/basic-statistics/supporting-topics/basics/null-and-alternative-hypotheses/) article, one-tailed tests are more powerful than two-tailed test. In addition to that, [this](https://www.youtube.com/watch?v=5NcMFlrnYp8&list=PLIeGtxpvyG-LrjxQ60pxZaimkaKKs0zGF) video is also quite helpful understanding these topics. with this in mind we can update/modify our null and alternative hypothesis. Let's see how we can rewrite this..
 
@@ -1237,8 +1204,7 @@ Onc thing we can do is try to set up the Null and Alternative Hypothesis in such
 
 #### Determine the test statistics:
 
-> This will be a two-tailed test since the difference between male and female passenger in the survival rate could be higher or lower than 0.
-> Since we do not know the standard deviation($\sigma$) and n is small, we will use the t-distribution.
+> This will be a two-tailed test since the difference between male and female passenger in the survival rate could be higher or lower than 0. Since we do not know the standard deviation($\sigma$) and n is small, we will use the t-distribution.
 
 #### Specify the significance level:
 
@@ -1258,7 +1224,7 @@ println("The mean difference between male and female survival rate: ", female_me
 
 ```
 
-Now, we have to understand that those two means are not **the population mean ($\bar{\mu}$)**. _The population mean is a statistical term statistician uses to indicate the actual average of the entire group. The group can be any gathering of multiple numbers such as animal, human, plants, money, stocks._ For example, To find the age population mean of Bulgaria; we will have to account for every single person's age and take their age. Which is almost impossible and if we were to go that route; there is no point of doing statistics in the first place. Therefore we approach this problem using sample sets. The idea of using sample set is that; if we take multiple samples of the same population and take the mean of them and put them in a distribution; eventually the distribution start to look more like a **normal distribution**. The more samples we take and the more sample means will be added and, the closer the normal distribution will reach towards population mean. This is where **Central limit theory** comes from. We will go more in depth of this topic later on.
+Now, we have to understand that those two means are not **the population mean (**$\bar{\mu}$). *The population mean is a statistical term statistician uses to indicate the actual average of the entire group. The group can be any gathering of multiple numbers such as animal, human, plants, money, stocks.* For example, To find the age population mean of Bulgaria; we will have to account for every single person's age and take their age. Which is almost impossible and if we were to go that route; there is no point of doing statistics in the first place. Therefore we approach this problem using sample sets. The idea of using sample set is that; if we take multiple samples of the same population and take the mean of them and put them in a distribution; eventually the distribution start to look more like a **normal distribution**. The more samples we take and the more sample means will be added and, the closer the normal distribution will reach towards population mean. This is where **Central limit theory** comes from. We will go more in depth of this topic later on.
 
 Going back to our dataset, like we are saying these means above are part of the whole story. We were given part of the data to train our machine learning models, and the other part of the data was held back for testing. Therefore, It is impossible for us at this point to know the population means of survival for male and females. Situation like this calls for a statistical approach. We will use the sampling distribution approach to do the test. let's take 50 random sample of male and female from our train data.
 
@@ -1286,16 +1252,15 @@ println("Difference between male and female mean sample mean: ",
         round(DF.mean(f_mean_samples) - DF.mean(m_mean_samples), digits=2))
 ```
 
-H0: male mean is greater or equal to female mean<br>
-H1: male mean is less than female mean.
+H0: male mean is greater or equal to female mean<br> H1: male mean is less than female mean.
 
-According to the samples our male samples ($\bar{x}_m$) and female samples($\bar{x}_f$) mean measured difference is ~ 0.55(statistically this is called the point estimate of the male population mean and female population mean). keeping in mind that...
+According to the samples our male samples ($\bar{x}_m$) and female samples($\bar{x}_f$) mean measured difference is \~ 0.55(statistically this is called the point estimate of the male population mean and female population mean). keeping in mind that...
 
-- We randomly select 50 people to be in the male group and 50 people to be in the female group.
-- We know our sample is selected from a broader population(trainning set).
-- We know we could have totally ended up with a different random sample of males and females.
+-   We randomly select 50 people to be in the male group and 50 people to be in the female group.
+-   We know our sample is selected from a broader population(trainning set).
+-   We know we could have totally ended up with a different random sample of males and females.
 
----
+------------------------------------------------------------------------
 
 With all three points above in mind, how confident are we that, the measured difference is real or statistically significant? we can perform a **t-test** to evaluate that. When we perform a **t-test** we are usually trying to find out **an evidence of significant difference between population mean with hypothesized mean(1 sample t-test) or in our case difference between two population means(2 sample t-test).**
 
@@ -1307,14 +1272,14 @@ The **t-statistics** is the measure of a degree to which our groups differ stand
 
 Here..
 
-- $\bar{x}$ is the sample mean.
-- $\mu$ is the hypothesized mean.
-- S is the standard deviation.
-- n is the sample size.
+-   $\bar{x}$ is the sample mean.
+-   $\mu$ is the hypothesized mean.
+-   S is the standard deviation.
+-   n is the sample size.
 
-1. Now, the denominator of this fraction $(\bar{x}-\mu)$ is basically the strength of the signal. where we calculate the difference between hypothesized mean and sample mean. If the mean difference is higher, then the signal is stronger.
+1.  Now, the denominator of this fraction $(\bar{x}-\mu)$ is basically the strength of the signal. where we calculate the difference between hypothesized mean and sample mean. If the mean difference is higher, then the signal is stronger.
 
-the numerator of this fraction ** ${S}/ {\sqrt{n}}$ ** calculates the amount of variation or noise of the data set. Here S is standard deviation, which tells us how much variation is there in the data. n is the sample size.
+the numerator of this fraction \*\* ${S}/ {\sqrt{n}}$ \*\* calculates the amount of variation or noise of the data set. Here S is standard deviation, which tells us how much variation is there in the data. n is the sample size.
 
 So, according to the explanation above, the t-value or t-statistics is basically measures the strength of the signal(the difference) to the amount of noise(the variation) in the data and that is how we calculate the t-value in one sample t-test. However, in order to calculate between two sample population mean or in our case we will use the follow equation.
 
@@ -1324,10 +1289,10 @@ This equation may seem too complex, however, the idea behind these two are simil
 
 Here..
 
-- $\bar{x}_M$ is the mean of our male group sample measurements.
-- $ \bar{x}\_F$ is the mean of female group samples.
-- $ n_M$ and $n_F$ are the sample number of observations in each group.
-- $ S^2$ is the sample variance.
+-   $\bar{x}_M$ is the mean of our male group sample measurements.
+-   \$ \bar{x}\_F\$ is the mean of female group samples.
+-   \$ n_M\$ and $n_F$ are the sample number of observations in each group.
+-   \$ S\^2\$ is the sample variance.
 
 It is good to have an understanding of what going on in the background. However, we will use **scipy.stats** to find the t-statistics.
 
@@ -1339,13 +1304,13 @@ It is good to have an understanding of what going on in the background. However,
 
 <a id="feature_engineering"></a>
 
----
+------------------------------------------------------------------------
 
 Feature Engineering is exactly what its sounds like. Sometimes we want to create extra features from with in the features that we have, sometimes we want to remove features that are alike. Features engineering is the simple word for doing all those. It is important to remember that we will create new features in such ways that will not cause **multicollinearity(when there is a relationship among independent variables)** to occur.
 
 ## name_length
 
-**_Creating a new feature "name_length" that will take the count of letters of each name_**
+***Creating a new feature "name_length" that will take the count of letters of each name***
 
 ```{julia}
 train[!, :name_length] = [length(i) for i in train.Name]
@@ -1371,7 +1336,7 @@ test[!, :nLength_group] = [name_length_group(x) for x in test.name_length]
 
 ## title
 
-**Getting the title of each name as a new feature. **
+**Getting the title of each name as a new feature.**
 
 ```{julia}
 train[!, :title] = [split(i, '.')[1] for i in train.Name]
@@ -1448,7 +1413,7 @@ println(unique(test.title))
 
 ## family_size
 
-**_Creating a new feature called "family_size"._**
+***Creating a new feature called "family_size".***
 
 ```{julia}
 ## Family_size seems like a good feature to create
@@ -1515,7 +1480,6 @@ test[!, :calculated_fare] = test.Fare ./ test.family_size;
 Some people have travelled in groups like family or friends. It seems like Fare column kept a record of the total fare rather than the fare of individual passenger, therefore calculated fare will be much handy in this situation.
 
 ## fare_group
-
 
 ```{julia}
 """
@@ -1589,7 +1553,6 @@ DF.select!(train, DF.Not(cols_to_drop))
 DF.select!(test, DF.Not(cols_to_drop))
 ```
 
-
 ## age
 
 As I promised before, we are going to use Random forest regressor in this section to predict the missing age values. Let's do it
@@ -1597,7 +1560,6 @@ As I promised before, we are going to use Random forest regressor in this sectio
 ```{julia}
 train[.!ismissing.(train.Age), :]
 ```
-
 
 ```{julia}
 Pkg.add(["DecisionTree", "MLJDecisionTreeInterface"])
@@ -1609,7 +1571,6 @@ import MLJModels
 age_train_data = train[.!ismissing.(train.Age), :]
 y_train = DF.collect(age_train_data[:, :Age])
 ```
-
 
 ```{julia}
 function completing_age(df::DF.DataFrame)
@@ -1643,6 +1604,7 @@ function completing_age(df::DF.DataFrame)
 
     # fill out missing values with prediction
     df[ismissing.(df.Age), :Age] = y_hat
+    df.Age = Float64.(df.Age) #Ensure its not Union{missing} (How is suffer because of not having this line)
 
     return df
 end
@@ -1703,23 +1665,33 @@ train = get_dummies(train, [:age_group])
 test = get_dummies(test, [:age_group])
 ```
 
-
-<div class="alert alert-danger">
+::: {.alert .alert-danger}
 <h1>Need to paraphrase this section</h1>
+
 <h2>Feature Selection</h2>
-<h3>Feature selection is an important part of machine learning models. There are many reasons why we use feature selection.</h3> 
+
+<h3>Feature selection is an important part of machine learning models. There are many reasons why we use feature selection.</h3>
+
 <ul>
-    <li>Simple models are easier to interpret. People who acts according to model results have a better understanding of the model.</li>
-    <li>Shorter training times.</li>
-    <li>Enhanced generalisation by reducing overfitting. </li>
-    <li>Easier to implement by software developers> model production.</li>
-        <ul>
-            <li>As Data Scientists we need to remember no to creating models with too many variables since it might overwhelm production engineers.</li>
-    </ul>
-    <li>Reduced risk of data errors during model use</li>
-    <li>Data redundancy</li>
+
+<li>Simple models are easier to interpret. People who acts according to model results have a better understanding of the model.</li>
+
+<li>Shorter training times.</li>
+
+<li>Enhanced generalisation by reducing overfitting.</li>
+
+<li>Easier to implement by software developers\> model production.</li>
+
+```         
+<ul>
+        <li>As Data Scientists we need to remember no to creating models with too many variables since it might overwhelm production engineers.</li>
 </ul>
-</div>
+<li>Reduced risk of data errors during model use</li>
+<li>Data redundancy</li>
+```
+
+</ul>
+:::
 
 # Part 6: Pre-Modeling Tasks
 
@@ -1727,7 +1699,7 @@ test = get_dummies(test, [:age_group])
 
 <a id="dependent_independent"></a>
 
----
+------------------------------------------------------------------------
 
 Before we apply any machine learning models, It is important to separate dependent and independent variables. Our dependent variable or target variable is something that we are trying to find, and our independent variable is the features we use to find the dependent variable. The way we use machine learning algorithm in a dataset is that we train our machine learning model by specifying independent variables and dependent variable. To specify them, we need to separate them from each other, and the code below does just that.
 
@@ -1743,18 +1715,18 @@ y = train.Survived;
 
 <a id="split_training_data" ></a>
 
----
+------------------------------------------------------------------------
 
 There are multiple ways of splitting data. They are...
 
-- train_test_split.
-- cross_validation.
+-   train_test_split.
+-   cross_validation.
 
 We have separated dependent and independent features; We have separated train and test data. So, why do we still have to split our training data? If you are curious about that, I have the answer. For this competition, when we train the machine learning algorithms, we use part of the training set usually two-thirds of the train data. Once we train our algorithm using 2/3 of the train data, we start to test our algorithms using the remaining data. If the model performs well we dump our test data in the algorithms to predict and submit the competition. The code below, basically splits the train data into 4 parts, **X_train**, **X_test**, **y_train**, **y_test**.
 
-- **X_train** and **y_train** first used to train the algorithm.
-- then, **X_test** is used in that trained algorithms to predict **outcomes. **
-- Once we get the **outcomes**, we compare it with **y_test**
+-   **X_train** and **y_train** first used to train the algorithm.
+-   then, **X_test** is used in that trained algorithms to predict **outcomes.**
+-   Once we get the **outcomes**, we compare it with **y_test**
 
 By comparing the **outcome** of the model with **y_test**, we can determine whether our algorithms are performing well or not. As we compare we use confusion matrix to determine different aspects of model performance.
 
@@ -1764,8 +1736,13 @@ P.S. When we use cross validation it is important to remember not to use **X_tra
 using Random
 Random.seed!(0)
 
-(X_train, X_test), (y_train, y_test) = MLJ.partition((X, y), 0.67, shuffle=true, multi=true)
+# We convert de datatype for better integration with models
+y = MLJ.coerce(y, MLJ.Multiclass)  
+# We convert all features to continous, ex. (false true) -> (0, 1)
+X = MLJ.coerce(X, MLJ.Count => MLJ.Continuous, MLJ.OrderedFactor => MLJ.Continuous)  
 
+
+(X_train, X_test), (y_train, y_test) = MLJ.partition((X, y), 0.67, shuffle=true, multi=true);
 ```
 
 ```{julia}
@@ -1780,10 +1757,9 @@ size(X_test)
 
 <a id="feature_scaling" ></a>
 
----
+------------------------------------------------------------------------
 
 Feature scaling is an important concept of machine learning models. Often times a dataset contain features highly varying in magnitude and unit. For some machine learning models, it is not a problem. However, for many other ones, its quite a problem. Many machine learning algorithms uses euclidian distances to calculate the distance between two points, it is quite a problem. Let's again look at a the sample of the **train** dataset below.
-
 
 ```{julia}
 sample = shuffle(1:DF.nrow(X_train))[1:5] 
@@ -1791,14 +1767,20 @@ X_train[sample, :]
 
 ```
 
-Here **Age** and **Calculated_fare** is much higher in magnitude compared to others machine learning features. This can create problems as many machine learning models will get confused thinking **Age** and **Calculated_fare** have higher weight than other features. Therefore, we need to do feature scaling to get a better result.
-There are multiple ways to do feature scaling.
+Here **Age** and **Calculated_fare** is much higher in magnitude compared to others machine learning features. This can create problems as many machine learning models will get confused thinking **Age** and **Calculated_fare** have higher weight than other features. Therefore, we need to do feature scaling to get a better result. There are multiple ways to do feature scaling.
 
 <ul>
-    <li><b>MinMaxScaler</b>-Scales the data using the max and min values so that it fits between 0 and 1.</li>
-    <li><b>StandardScaler</b>-Scales the data so that it has mean 0 and variance of 1.</li>
-    <li><b>RobustScaler</b>-Scales the data similary to Standard Scaler, but makes use of the median and scales using the interquertile range so as to aviod issues with large outliers.</b>
- </ul>
+
+<li><b>MinMaxScaler</b>-Scales the data using the max and min values so that it fits between 0 and 1.</li>
+
+<li><b>StandardScaler</b>-Scales the data so that it has mean 0 and variance of 1.</li>
+
+<li>
+
+<b>RobustScaler</b>-Scales the data similary to Standard Scaler, but makes use of the median and scales using the interquertile range so as to aviod issues with large outliers.</b>
+
+</ul>
+
 I will discuss more on that in a different kernel. For now we will use <b>Standard Scaler</b> to feature scale our dataset.
 
 P.S. I am showing a sample of both before and after so that you can see how scaling changes the dataset.
@@ -1811,391 +1793,316 @@ DF.first(X_train, 5)
 ```
 
 ```{julia}
-from sklearn.preprocessing import StandardScaler
-st_scale = StandardScaler()
+Standardizer = MLJ.@load Standardizer pkg=MLJModels
+standardizer = Standardizer()
+mach_scaler = MLJ.machine(standardizer, X_train)
 
-## transforming "train_x"
-X_train = st_scale.fit_transform(X_train)
-## transforming "test_x"
-X_test = st_scale.transform(X_test)
-
-## transforming "The testset"
-#test = st_scale.transform(test)
+MLJ.fit!(mach_scaler)
+X_train_scaled = MLJ.transform(mach_scaler, X_train)
+X_test_scaled = MLJ.transform(mach_scaler, X_test);
 ```
 
 <h3><font color="#5831bc" face="Comic Sans MS">After Scaling</font></h3>
 
-```{julia}
-#| _kg_hide-input: true
-#| _uuid: fc6f031833ac9e2734aa7b3a2373b667679c6b2f
-#| execution: {iopub.execute_input: '2021-06-26T16:35:23.333531Z', iopub.status.busy: '2021-06-26T16:35:23.333111Z', iopub.status.idle: '2021-06-26T16:35:23.359161Z', shell.execute_reply: '2021-06-26T16:35:23.358554Z', shell.execute_reply.started: '2021-06-26T16:35:23.333347Z'}
-pd.DataFrame(X_train, columns=headers).head()
-```
-
 You can see how the features have transformed above.
+
+### NOTE: In this example, in difference with the original notebook, the categorical and boolean columns were not transformed, as it doesnt affect negativaly the model
 
 # Part 7: Modeling the Data
 
 <a id="modelingthedata"></a>
 
----
+------------------------------------------------------------------------
 
 In the previous versions of this kernel, I thought about explaining each model before applying it. However, this process makes this kernel too lengthy to sit and read at one go. Therefore I have decided to break this kernel down and explain each algorithm in a different kernel and add the links here. If you like to review logistic regression, please click [here](https://www.kaggle.com/masumrumi/logistic-regression-with-titanic-dataset).
 
 ```{julia}
-#| _cell_guid: 0c8b0c41-6738-4689-85b0-b83a16e46ab9
-#| _uuid: 09140be1a71e37b441a16951a82747462b767e6e
-#| execution: {iopub.execute_input: '2021-06-26T16:35:23.361067Z', iopub.status.busy: '2021-06-26T16:35:23.360637Z', iopub.status.idle: '2021-06-26T16:35:23.383762Z', shell.execute_reply: '2021-06-26T16:35:23.383049Z', shell.execute_reply.started: '2021-06-26T16:35:23.360889Z'}
-# import LogisticRegression model in python.
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import mean_absolute_error, accuracy_score
+Pkg.add("MLJLinearModels")
+```
 
-## call on the model object
-logreg = LogisticRegression(solver='liblinear',
-                            penalty= 'l1',random_state = 42
+```{julia}
 
-                            )
+LogisticClassifier = MLJ.@load LogisticClassifier pkg=MLJLinearModels
 
-## fit the model with "train_x" and "train_y"
-logreg.fit(X_train,y_train)
+logreg = LogisticClassifier(penalty=:l1)
+mach_logreg = MLJ.machine(logreg, X_train_scaled, y_train)
+MLJ.fit!(mach_logreg)
 
-## Once the model is trained we want to find out how well the model is performing, so we test the model.
-## we use "X_test" portion of the data(this data was not used to fit the model) to predict model outcome.
-y_pred = logreg.predict(X_test)
-
-## Once predicted we save that outcome in "y_pred" variable.
-## Then we compare the predicted value( "y_pred") and actual value("test_y") to see how well our model is performing.
+y_prob = MLJ.predict(mach_logreg, X_test_scaled);
+# y_prob Has the raw predictions -> [0.13, 0.4, 0.75] etc
+# MLJ.mode.(y_prob) has the categorical predictions -> [0, 0, 1] etc
+y_pred = MLJ.mode.(y_prob)
 ```
 
 <h1><font color="#5831bc" face="Comic Sans MS">Evaluating a classification model</font></h1>
 
 There are multiple ways to evaluate a classification model.
 
-- Confusion Matrix.
-- ROC Curve
-- AUC Curve.
+-   Confusion Matrix.
+-   ROC Curve
+-   AUC Curve.
 
 ## Confusion Matrix
 
 <b>Confusion matrix</b>, a table that <b>describes the performance of a classification model</b>. Confusion Matrix tells us how many our model predicted correctly and incorrectly in terms of binary/multiple outcome classes by comparing actual and predicted cases. For example, in terms of this dataset, our model is a binary one and we are trying to classify whether the passenger survived or not survived. we have fit the model using **X_train** and **y_train** and predicted the outcome of **X_test** in the variable **y_pred**. So, now we will use a confusion matrix to compare between **y_test** and **y_pred**. Let's do the confusion matrix.
 
 ```{julia}
-#| execution: {iopub.execute_input: '2021-06-26T16:35:23.385843Z', iopub.status.busy: '2021-06-26T16:35:23.385341Z', iopub.status.idle: '2021-06-26T16:35:23.399434Z', shell.execute_reply: '2021-06-26T16:35:23.398674Z', shell.execute_reply.started: '2021-06-26T16:35:23.385606Z'}
-from sklearn.metrics import classification_report, confusion_matrix
-# printing confision matrix
-pd.DataFrame(confusion_matrix(y_test,y_pred),\
-            columns=["Predicted Not-Survived", "Predicted Survived"],\
-            index=["Not-Survived","Survived"] )
+conf_matrix = MLJ.confusion_matrix(y_pred, y_test)
 ```
 
 Our **y_test** has a total of 294 data points; part of the original train set that we splitted in order to evaluate our model. Each number here represents certain details about our model. If we were to think about this interms of column and raw, we could see that...
 
-- the first column is of data points that the machine predicted as not-survived.
-- the second column is of the statistics that the model predicted as survievd.
-- In terms of raws, the first raw indexed as "Not-survived" means that the value in that raw are actual statistics of not survived once.
-- and the "Survived" indexed raw are values that actually survived.
+-   the first column is of data points that the machine predicted as not-survived.
+-   the second column is of the statistics that the model predicted as survievd.
+-   In terms of raws, the first raw indexed as "Not-survived" means that the value in that raw are actual statistics of not survived once.
+-   and the "Survived" indexed raw are values that actually survived.
 
 Now you can see that the predicted not-survived and predicted survived sort of overlap with actual survived and actual not-survived. After all it is a matrix and we have some terminologies to call these statistics more specifically. Let's see what they are
 
 <ul style="list-style-type:square;">
-    <li><b>True Positive(TP)</b>: values that the model predicted as yes(survived) and is actually yes(survived).</li>
-    <li><b>True Negative(TN)</b>: values that model predicted as no(not-survived) and is actually no(not-survived)</li>
-    <li><b>False Positive(or Type I error)</b>: values that model predicted as yes(survived) but actually no(not-survived)</li>
-    <li><b>False Negative(or Type II error)</b>: values that model predicted as no(not-survived) but actually yes(survived)</li>
+
+<li><b>True Positive(TP)</b>: values that the model predicted as yes(survived) and is actually yes(survived).</li>
+
+<li><b>True Negative(TN)</b>: values that model predicted as no(not-survived) and is actually no(not-survived)</li>
+
+<li><b>False Positive(or Type I error)</b>: values that model predicted as yes(survived) but actually no(not-survived)</li>
+
+<li><b>False Negative(or Type II error)</b>: values that model predicted as no(not-survived) but actually yes(survived)</li>
+
 </ul>
 
 For this dataset, whenever the model is predicting something as yes, it means the model is predicting that the passenger survived and for cases when the model predicting no; it means the passenger did not survive. Let's determine the value of all these terminologies above.
 
 <ul style="list-style-type:square;">
-    <li><b>True Positive(TP):87</b></li>
-    <li><b>True Negative(TN):149</b></li>
-    <li><b>False Positive(FP):28</b></li>
-    <li><b>False Negative(FN):30</b></li>
+
+<li><b>True Positive(TP):85</b></li>
+
+<li><b>True Negative(TN):158</b></li>
+
+<li><b>False Positive(FP):28</b></li>
+
+<li><b>False Negative(FN):22</b></li>
+
 </ul>
+
 From these four terminologies, we can compute many other rates that are used to evaluate a binary classifier.
 
 #### Accuracy:
 
-** Accuracy is the measure of how often the model is correct.**
+\*\* Accuracy is the measure of how often the model is correct.\*\*
 
-- (TP + TN)/total = (87+149)/294 = .8027
+-   (TP + TN)/total = (85+158)/293 = .829
 
 We can also calculate accuracy score using scikit learn.
 
 ```{julia}
-#| execution: {iopub.execute_input: '2021-06-26T16:35:23.400652Z', iopub.status.busy: '2021-06-26T16:35:23.400403Z', iopub.status.idle: '2021-06-26T16:35:23.408635Z', shell.execute_reply: '2021-06-26T16:35:23.40776Z', shell.execute_reply.started: '2021-06-26T16:35:23.400604Z'}
-from sklearn.metrics import accuracy_score
-accuracy_score(y_test, y_pred)
+MLJ.accuracy(y_pred, y_test)
 ```
 
 **Misclassification Rate:** Misclassification Rate is the measure of how often the model is wrong\*\*
 
-- Misclassification Rate and Accuracy are opposite of each other.
-- Missclassification is equivalent to 1 minus Accuracy.
-- Misclassification Rate is also known as "Error Rate".
+-   Misclassification Rate and Accuracy are opposite of each other.
+-   Missclassification is equivalent to 1 minus Accuracy.
+-   Misclassification Rate is also known as "Error Rate".
 
-> (FP + FN)/Total = (28+30)/294 = 0.19
+> (FP + FN)/Total = (28+22)/293 = 0.17
 
 **True Positive Rate/Recall/Sensitivity:** How often the model predicts yes(survived) when it's actually yes(survived)?
 
-> TP/(TP+FN) = 87/(87+30) = 0.7435897435897436
+> TP/(TP+FN) = 85/(85+22) = 0.794392523364486
 
 ```{julia}
-#| execution: {iopub.execute_input: '2021-06-26T16:35:23.410491Z', iopub.status.busy: '2021-06-26T16:35:23.410085Z', iopub.status.idle: '2021-06-26T16:35:23.418315Z', shell.execute_reply: '2021-06-26T16:35:23.417549Z', shell.execute_reply.started: '2021-06-26T16:35:23.410444Z'}
-from sklearn.metrics import recall_score
-recall_score(y_test, y_pred)
+MLJ.recall(y_pred, y_test)
 ```
 
 **False Positive Rate:** How often the model predicts yes(survived) when it's actually no(not-survived)?
 
-> FP/(FP+TN) = 28/(28+149) = 0.15819209039548024
+> FP/(FP+TN) = 28/(28+158) = 0.1505376344
 
 **True Negative Rate/Specificity:** How often the model predicts no(not-survived) when it's actually no(not-survived)?
 
-- True Negative Rate is equivalent to 1 minus False Positive Rate.
+-   True Negative Rate is equivalent to 1 minus False Positive Rate.
 
-> TN/(TN+FP) = 149/(149+28) = 0.8418079096045198
+> TN/(TN+FP) = 158/(158+28) = 0.84946236559
 
 **Precision:** How often is it correct when the model predicts yes.
 
-> TP/(TP+FP) = 87/(87+28) = 0.7565217391304347
+> TP/(TP+FP) = 85/(85+28) = 0.75221238938
 
 ```{julia}
-#| execution: {iopub.execute_input: '2021-06-26T16:35:23.4204Z', iopub.status.busy: '2021-06-26T16:35:23.419791Z', iopub.status.idle: '2021-06-26T16:35:23.429679Z', shell.execute_reply: '2021-06-26T16:35:23.42864Z', shell.execute_reply.started: '2021-06-26T16:35:23.420242Z'}
-from sklearn.metrics import precision_score
-precision_score(y_test, y_pred)
+MLJ.ppv(y_pred, y_test)  # aka precision
 ```
 
 ```{julia}
-#| execution: {iopub.execute_input: '2021-06-26T16:35:23.431682Z', iopub.status.busy: '2021-06-26T16:35:23.431234Z', iopub.status.idle: '2021-06-26T16:35:23.44225Z', shell.execute_reply: '2021-06-26T16:35:23.441202Z', shell.execute_reply.started: '2021-06-26T16:35:23.43147Z'}
-from sklearn.metrics import classification_report, balanced_accuracy_score
-print(classification_report(y_test, y_pred))
+function simple_classification_report(y_true, y_pred)
+    println("Classification Report:")
+    println("======================")
+    
+    # Métricas principales
+    println("Accuracy: ", round(MLJ.accuracy(y_pred, y_true), digits=4))
+    println("Balanced Accuracy: ", round(MLJ.balanced_accuracy(y_pred, y_true), digits=4))
+    println("F1 Score: ", round(MLJ.f1score(y_pred, y_true), digits=4))
+    println("  Precision: ", round(MLJ.positive_predictive_value(y_pred, y_true), digits=4))
+    println("  Recall:    ", round(MLJ.true_positive_rate(y_pred, y_true), digits=4))
+end
+
+# Usar la función
+simple_classification_report(y_test, y_pred)
 ```
 
 we have our confusion matrix. How about we give it a little more character.
 
 ```{julia}
-#| _kg_hide-input: true
-#| execution: {iopub.execute_input: '2021-06-26T16:35:23.444153Z', iopub.status.busy: '2021-06-26T16:35:23.443714Z', iopub.status.idle: '2021-06-26T16:35:23.873374Z', shell.execute_reply: '2021-06-26T16:35:23.869521Z', shell.execute_reply.started: '2021-06-26T16:35:23.444104Z'}
-from sklearn.utils.multiclass import unique_labels
-from sklearn.metrics import confusion_matrix
+fig = Makie.Figure()
+ax = Makie.Axis(fig[1, 1], 
+    title = "Confusion Matrix",  
+    xticks=((1:2),["Actual 0", "Actual 1"]), 
+    yticks=((1:2), ["Predicted 0", "Predicted 1"]),
+)
 
+hm = Makie.heatmap!(ax, (1:2), (1:2), conf_matrix.mat, colormap="Blues")
 
-def plot_confusion_matrix(y_true, y_pred, classes,
-                          normalize=False,
-                          title=None,
-                          cmap=plt.cm.Blues):
-    """
-    This function prints and plots the confusion matrix.
-    Normalization can be applied by setting `normalize=True`.
-    """
-    if not title:
-        if normalize:
-            title = 'Normalized confusion matrix'
-        else:
-            title = 'Confusion matrix, without normalization'
+for i in 1:2
+    for j in 1:2
+        text_val = conf_matrix.mat[j, i]
+        
+        Makie.text!(ax, i, j, 
+            text = string(round(text_val, digits=2)),
+            color = abs(text_val) > 100 ? :white : :black,
+            align = (:center, :center)
+        )
+    end
+end
 
-    # Compute confusion matrix
-    cm = confusion_matrix(y_true, y_pred)
-    # Only use the labels that appear in the data
-    classes = classes[unique_labels(y_true, y_pred)]
-    if normalize:
-        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-        print("Normalized confusion matrix")
-    else:
-        print('Confusion matrix, without normalization')
+Makie.Colorbar(fig[1, 2], hm, 
+    label = "Counts",
+)
 
-    print(cm)
-
-    fig, ax = plt.subplots()
-    im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
-    ax.figure.colorbar(im, ax=ax)
-    # We want to show all ticks...
-    ax.set(xticks=np.arange(cm.shape[1]),
-           yticks=np.arange(cm.shape[0]),
-           # ... and label them with the respective list entries
-           xticklabels=classes, yticklabels=classes,
-           title=title,
-           ylabel='True label',
-           xlabel='Predicted label')
-
-    # Rotate the tick labels and set their alignment.
-    plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
-             rotation_mode="anchor")
-
-    # Loop over data dimensions and create text annotations.
-    fmt = '.2f' if normalize else 'd'
-    thresh = cm.max() / 2.
-    for i in range(cm.shape[0]):
-        for j in range(cm.shape[1]):
-            ax.text(j, i, format(cm[i, j], fmt),
-                    ha="center", va="center",
-                    color="white" if cm[i, j] > thresh else "black")
-    fig.tight_layout()
-    return ax
-
-
-np.set_printoptions(precision=2)
-
-class_names = np.array(['not_survived','survived'])
-
-# Plot non-normalized confusion matrix
-plot_confusion_matrix(y_test, y_pred, classes=class_names,
-                      title='Confusion matrix, without normalization')
-
-# Plot normalized confusion matrix
-plot_confusion_matrix(y_test, y_pred, classes=class_names, normalize=True,
-                      title='Normalized confusion matrix')
-
-plt.show()
+fig
 ```
 
 <h1>AUC & ROC Curve</h1>
 
 ```{julia}
-#| _uuid: 1e71bc7c685b757b6920076527780674d6f619bc
-#| execution: {iopub.execute_input: '2021-06-26T16:35:23.877891Z', iopub.status.busy: '2021-06-26T16:35:23.875713Z', iopub.status.idle: '2021-06-26T16:35:24.505751Z', shell.execute_reply: '2021-06-26T16:35:24.501314Z', shell.execute_reply.started: '2021-06-26T16:35:23.87783Z'}
-from sklearn.metrics import roc_curve, auc
-#plt.style.use('seaborn-pastel')
-y_score = logreg.decision_function(X_test)
+fig = Makie.Figure()
+ax = Makie.Axis(fig[1, 1],
+    title = "ROC Curve",
+    xlabel = "False Positive Rate",
+    ylabel = "True Positive Rate",
+   
+)
+fpr, tpr, _ = MLJ.roc_curve(y_prob, y_test)
 
-FPR, TPR, _ = roc_curve(y_test, y_score)
-ROC_AUC = auc(FPR, TPR)
-print (ROC_AUC)
-
-plt.figure(figsize =[11,9])
-plt.plot(FPR, TPR, label= 'ROC curve(area = %0.2f)'%ROC_AUC, linewidth= 4)
-plt.plot([0,1],[0,1], 'k--', linewidth = 4)
-plt.xlim([0.0,1.0])
-plt.ylim([0.0,1.05])
-plt.xlabel('False Positive Rate', fontsize = 18)
-plt.ylabel('True Positive Rate', fontsize = 18)
-plt.title('ROC for Titanic survivors', fontsize= 18)
-plt.show()
+Makie.lines!(ax, fpr, tpr,
+    label = "ROC Curve",
+    linewidth=4
+)
+Makie.ablines!(ax, 0, 1,
+    color = :black,
+    linestyle=:dash,
+)
+fig
 ```
 
+ROC:
+
 ```{julia}
-#| _uuid: 22f15e384372a1ece2f28cd9eced0c703a79598f
-#| execution: {iopub.execute_input: '2021-06-26T16:35:24.50731Z', iopub.status.busy: '2021-06-26T16:35:24.506981Z', iopub.status.idle: '2021-06-26T16:35:24.8481Z', shell.execute_reply: '2021-06-26T16:35:24.846974Z', shell.execute_reply.started: '2021-06-26T16:35:24.507251Z'}
-from sklearn.metrics import precision_recall_curve
-
-y_score = logreg.decision_function(X_test)
-
-precision, recall, _ = precision_recall_curve(y_test, y_score)
-PR_AUC = auc(recall, precision)
-
-plt.figure(figsize=[11,9])
-plt.plot(recall, precision, label='PR curve (area = %0.2f)' % PR_AUC, linewidth=4)
-plt.xlabel('Recall', fontsize=18)
-plt.ylabel('Precision', fontsize=18)
-plt.title('Precision Recall Curve for Titanic survivors', fontsize=18)
-plt.legend(loc="lower right")
-plt.show()
+roc_auc = MLJ.auc(y_prob, y_test)
 ```
 
 ## Using Cross-validation:
 
 Pros:
 
-- Helps reduce variance.
-- Expends models predictability.
+-   Helps reduce variance.
+-   Expands models predictability.
 
 ```{julia}
-#| execution: {iopub.execute_input: '2021-06-26T16:35:24.855506Z', iopub.status.busy: '2021-06-26T16:35:24.853028Z', iopub.status.idle: '2021-06-26T16:35:24.862513Z', shell.execute_reply: '2021-06-26T16:35:24.861421Z', shell.execute_reply.started: '2021-06-26T16:35:24.853368Z'}
-sc = st_scale
+mach_standarizer = MLJ.machine(standardizer, X)
+MLJ.fit!(mach_standarizer)
+X = MLJ.transform(mach_standarizer, X)
 ```
 
 ```{julia}
-#| _uuid: 17791284c3e88236de2daa112422cde8ddcb0641
-#| execution: {iopub.execute_input: '2021-06-26T16:35:24.868704Z', iopub.status.busy: '2021-06-26T16:35:24.86826Z', iopub.status.idle: '2021-06-26T16:35:25.014634Z', shell.execute_reply: '2021-06-26T16:35:25.013771Z', shell.execute_reply.started: '2021-06-26T16:35:24.86853Z'}
-#| scrolled: true
-## Using StratifiedShuffleSplit
-## We can use KFold, StratifiedShuffleSplit, StratiriedKFold or ShuffleSplit, They are all close cousins. look at sklearn userguide for more info.
-from sklearn.model_selection import StratifiedShuffleSplit, cross_val_score
-cv = StratifiedShuffleSplit(n_splits = 10, test_size = .25, random_state = 0 ) # run model 10x with 60/30 split intentionally leaving out 10%
-## Using standard scale for the whole dataset.
+cv = MLJ.StratifiedCV(nfolds=10, shuffle=true, rng=0)
 
-## saving the feature names for decision tree display
-column_names = X.columns
+logreg = LogisticClassifier(penalty=:l2)
+mach_logreg = MLJ.machine(logreg, X_scaled, y)
+MLJ.fit!(mach_logreg)
 
-X = sc.fit_transform(X)
-accuracies = cross_val_score(LogisticRegression(solver='liblinear'), X,y, cv  = cv)
-print ("Cross-Validation accuracy scores:{}".format(accuracies))
-print ("Mean Cross-Validation accuracy score: {}".format(round(accuracies.mean(),5)))
+evaluation = MLJ.evaluate!(mach_logreg, resampling=cv, verbosity=0, measure=[MLJ.Accuracy()]);
+
+println("Cross-Validation accuracy scores: ", evaluation.per_fold)
+println("Mean Cross-Validation accuracy score: ", MLJ.mean(evaluation.per_fold[1]))
 ```
 
 ## Grid Search on Logistic Regression
 
-- What is grid search?
-- What are the pros and cons?
+-   What is grid search?
+-   What are the pros and cons?
 
 **Gridsearch** is a simple concept but effective technique in Machine Learning. The word **GridSearch** stands for the fact that we are searching for optimal parameter/parameters over a "grid." These optimal parameters are also known as **Hyperparameters**. **The Hyperparameters are model parameters that are set before fitting the model and determine the behavior of the model.**. For example, when we choose to use linear regression, we may decide to add a penalty to the loss function such as Ridge or Lasso. These penalties require specific alpha (the strength of the regularization technique) to set beforehand. The higher the value of alpha, the more penalty is being added. GridSearch finds the optimal value of alpha among a range of values provided by us, and then we go on and use that optimal value to fit the model and get sweet results. It is essential to understand those model parameters are different from models outcomes, for example, **coefficients** or model evaluation metrics such as **accuracy score** or **mean squared error** are model outcomes and different than hyperparameters.
 
-#### This part of the kernel is a working progress. Please check back again for future updates.####
+#### This part of the kernel is a working progress. Please check back again for future updates.
 
 ```{julia}
-#| _cell_guid: 0620523c-b33b-4302-8a1c-4b6759ffa5fa
-#| _uuid: 36a379a00a31dd161be1723f65490990294fe13d
-#| execution: {iopub.execute_input: '2021-06-26T16:35:25.021234Z', iopub.status.busy: '2021-06-26T16:35:25.018883Z', iopub.status.idle: '2021-06-26T16:35:40.193433Z', shell.execute_reply: '2021-06-26T16:35:40.192566Z', shell.execute_reply.started: '2021-06-26T16:35:25.021181Z'}
-from sklearn.model_selection import GridSearchCV, StratifiedKFold
-## C_vals is the alpla value of lasso and ridge regression(as alpha increases the model complexity decreases,)
-## remember effective alpha scores are 0<alpha<infinity
-C_vals = [0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,2,3,4,5,6,7,8,9,10,12,13,14,15,16,16.5,17,17.5,18]
-## Choosing penalties(Lasso(l1) or Ridge(l2))
-penalties = ['l1','l2']
-## Choose a cross validation strategy.
-cv = StratifiedShuffleSplit(n_splits = 10, test_size = .25)
+Random.seed!(30)
 
-## setting param for param_grid in GridSearchCV.
-param = {'penalty': penalties, 'C': C_vals}
+logreg = LogisticClassifier()
+lambda_vals = exp10.(range(log10(0.01), stop=log10(0.1), length=50))
+penalties = [:l1, :l2]
 
-logreg = LogisticRegression(solver='liblinear')
-## Calling on GridSearchCV object.
-grid = GridSearchCV(estimator=LogisticRegression(),
-                           param_grid = param,
-                           scoring = 'accuracy',
-                            n_jobs =-1,
-                           cv = cv
-                          )
-## Fitting the model
-grid.fit(X, y)
+ranges = [
+    range(logreg, :lambda, values = lambda_vals),
+    range(logreg, :penalty, values = penalties)
+]
+
+
+cv = MLJ.StratifiedCV(nfolds=10, shuffle=true, rng=123)
+
+tuned_logreg = MLJ.TunedModel(
+    model=logreg,
+    tuning=MLJ.Grid(resolution=1),
+    resampling=cv,
+    range=ranges,
+    measure=MLJ.Accuracy(),  
+    acceleration=MLJ.CPUThreads(), 
+    acceleration_resampling=MLJ.CPUThreads()
+)
+
+# 5. Crear y entrenar la máquina
+mach = MLJ.machine(tuned_logreg, X, y)
+MLJ.fit!(mach)
 ```
 
 ```{julia}
-#| _cell_guid: 1fa35072-87c4-4f47-86ab-dda03d4b7b15
-#| _uuid: 4c6650e39550527b271ddf733dcfe5221bcd5c98
-#| execution: {iopub.execute_input: '2021-06-26T16:35:40.195216Z', iopub.status.busy: '2021-06-26T16:35:40.194925Z', iopub.status.idle: '2021-06-26T16:35:40.201259Z', shell.execute_reply: '2021-06-26T16:35:40.200225Z', shell.execute_reply.started: '2021-06-26T16:35:40.19517Z'}
-## Getting the best of everything.
-print (grid.best_score_)
-print (grid.best_params_)
-print(grid.best_estimator_)
+best_model = MLJ.fitted_params(mach).best_model
+println("Mejores parámetros: ")
+println("  lambda = ", best_model.lambda)
+println("  penalty = ", best_model.penalty)
 
+MLJ.report(mach).best_history_entry
 ```
 
 #### Using the best parameters from the grid-search.
 
 ```{julia}
-#| _uuid: ba53f6b3610821dc820936dde7b7803a54d20f5a
-#| execution: {iopub.execute_input: '2021-06-26T16:35:40.204086Z', iopub.status.busy: '2021-06-26T16:35:40.203576Z', iopub.status.idle: '2021-06-26T16:35:40.214041Z', shell.execute_reply: '2021-06-26T16:35:40.212929Z', shell.execute_reply.started: '2021-06-26T16:35:40.20393Z'}
-### Using the best parameters from the grid-search.
-logreg_grid = grid.best_estimator_
-logreg_grid.score(X,y)
+#MLJ.predict(mach, X_test) # the mach already has the best model
 ```
 
-#### This part of the kernel is a working progress. Please check back again for future updates.####
+#### This concludes the Julia notebook. As you can see, the interface and structure for building models are very similar to Julia. The notebook now continues with the original Julia examples. Hope you enjoy reading the notebook 😊
+
+#### 
 
 Resources:
 
-- [Confusion Matrix](https://www.youtube.com/watch?v=8Oog7TXHvFY)
-
 ### Under-fitting & Over-fitting:
 
-So, we have our first model and its score. But, how do we make sure that our model is performing well. Our model may be overfitting or underfitting. In fact, for those of you don't know what overfitting and underfitting is, Let's find out.
+-   [Confusion Matrix](https://www.youtube.com/watch?v=8Oog7TXHvFY) So, we have our first model and its score. But, how do we make sure that our model is performing well. Our model may be overfitting or underfitting. In fact, for those of you don't know what overfitting and underfitting is, Let's find out.
 
 ![](https://cdncontribute.geeksforgeeks.org/wp-content/uploads/fittings.jpg)
 
-As you see in the chart above. **Underfitting** is when the model fails to capture important aspects of the data and therefore introduces more bias and performs poorly. On the other hand, **Overfitting** is when the model performs too well on the training data but does poorly in the validation set or test sets. This situation is also known as having less bias but more variation and perform poorly as well. Ideally, we want to configure a model that performs well not only in the training data but also in the test data. This is where **bias-variance tradeoff** comes in. When we have a model that overfits, meaning less biased and more of variance, we introduce some bias in exchange of having much less variance. One particular tactic for this task is regularization models (Ridge, Lasso, Elastic Net). These models are built to deal with the bias-variance tradeoff. This [kernel](https://www.kaggle.com/dansbecker/underfitting-and-overfitting) explains this topic well. Also, the following chart gives us a mental picture of where we want our models to be.
-![](http://scott.fortmann-roe.com/docs/docs/BiasVariance/biasvariance.png)
+As you see in the chart above. **Underfitting** is when the model fails to capture important aspects of the data and therefore introduces more bias and performs poorly. On the other hand, **Overfitting** is when the model performs too well on the training data but does poorly in the validation set or test sets. This situation is also known as having less bias but more variation and perform poorly as well. Ideally, we want to configure a model that performs well not only in the training data but also in the test data. This is where **bias-variance tradeoff** comes in. When we have a model that overfits, meaning less biased and more of variance, we introduce some bias in exchange of having much less variance. One particular tactic for this task is regularization models (Ridge, Lasso, Elastic Net). These models are built to deal with the bias-variance tradeoff. This [kernel](https://www.kaggle.com/dansbecker/underfitting-and-overfitting) explains this topic well. Also, the following chart gives us a mental picture of where we want our models to be. ![](http://scott.fortmann-roe.com/docs/docs/BiasVariance/biasvariance.png)
 
 Ideally, we want to pick a sweet spot where the model performs well in training set, validation set, and test set. As the model gets complex, bias decreases, variance increases. However, the most critical part is the error rates. We want our models to be at the bottom of that **U** shape where the error rate is the least. That sweet spot is also known as **Optimum Model Complexity(OMC).**
 
@@ -2204,19 +2111,26 @@ Now that we know what we want in terms of under-fitting and over-fitting, let's 
 How to combat over-fitting?
 
 <ul>
-    <li>Simplify the model by using less parameters.</li>
-    <li>Simplify the model by changing the hyperparameters.</li>
-    <li>Introducing regularization models. </li>
-    <li>Use more training data. </li>
-    <li>Gatter more data ( and gather better quality data). </li>
-    </ul>
- #### This part of the kernel is a working progress. Please check back again for future updates.####
+
+<li>Simplify the model by using less parameters.</li>
+
+<li>Simplify the model by changing the hyperparameters.</li>
+
+<li>Introducing regularization models.</li>
+
+<li>Use more training data.</li>
+
+<li>Gatter more data ( and gather better quality data).</li>
+
+</ul>
+
+\#### This part of the kernel is a working progress. Please check back again for future updates.####
 
 ## 7b. K-Nearest Neighbor classifier(KNN)
 
 <a id="knn"></a>
 
----
+------------------------------------------------------------------------
 
 ```{julia}
 #| _uuid: 953bc2c18b5fd93bcd51a42cc04a0539d86d5bac
@@ -2340,7 +2254,7 @@ knn_ran_grid.score(X,y)
 
 <a id="gaussian_naive"></a>
 
----
+------------------------------------------------------------------------
 
 ```{julia}
 #| _uuid: 8b2435030dbef1303bfc2864d227f5918f359330
@@ -2360,7 +2274,7 @@ print(gaussian_accy)
 
 <a id="svm"></a>
 
----
+------------------------------------------------------------------------
 
 ```{julia}
 #| _uuid: 56895672215b0b6365c6aaa10e446216ef635f53
@@ -2433,7 +2347,7 @@ dectree_grid = grid.best_estimator_
 dectree_grid.score(X,y)
 ```
 
- <h4> Let's look at the feature importance from decision tree grid.</h4>
+<h4>Let's look at the feature importance from decision tree grid.</h4>
 
 ```{julia}
 #| execution: {iopub.execute_input: '2021-06-26T16:37:58.013756Z', iopub.status.busy: '2021-06-26T16:37:58.01221Z', iopub.status.idle: '2021-06-26T16:37:58.034194Z', shell.execute_reply: '2021-06-26T16:37:58.033436Z', shell.execute_reply.started: '2021-06-26T16:37:58.013683Z'}
@@ -2509,9 +2423,10 @@ feature_importances.sort_values(by='importance', ascending=False).head(10)
 
 <h3>Why Random Forest?(Pros and Cons)</h3>
 
----
+------------------------------------------------------------------------
 
 <h2>Introducing Ensemble Learning</h2>
+
 In statistics and machine learning, ensemble methods use multiple learning algorithms to obtain better predictive performance than could be obtained from any of the constituent learning algorithms alone.
 
 There are two types of ensemple learnings.
@@ -2524,31 +2439,48 @@ There are two types of ensemple learnings.
 
 > The other family of ensemble methods are boosting methods, where base estimators are built sequentially and one tries to reduce the bias of the combined estimator. The motivation is to combine several weak models to produce a powerful ensemble.
 
-<h4 align="right">Source:GA</h4>
+<h4 align="right">
+
+Source:GA
+
+</h4>
 
 Resource: <a href="https://towardsdatascience.com/ensemble-methods-bagging-boosting-and-stacking-c9214a10a205">Ensemble methods: bagging, boosting and stacking</a>
 
----
+------------------------------------------------------------------------
 
 ## 7g. Bagging Classifier
 
 <a id="bagging"></a>
 
----
+------------------------------------------------------------------------
 
 <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.BaggingClassifier.html">Bagging Classifier</a>(Bootstrap Aggregating) is the ensemble method that involves manipulating the training set by resampling and running algorithms on it. Let's do a quick review:
 
-- Bagging classifier uses a process called bootstrapped dataset to create multiple datasets from one original dataset and runs algorithm on each one of them. Here is an image to show how bootstrapped dataset works.
-<img src="https://uc-r.github.io/public/images/analytics/bootstrap/bootstrap.png" width="600">
-<h4 align="center">Resampling from original dataset to bootstrapped datasets</h4>
-<h4 align="right">Source: https://uc-r.github.io</h4>
+-   Bagging classifier uses a process called bootstrapped dataset to create multiple datasets from one original dataset and runs algorithm on each one of them. Here is an image to show how bootstrapped dataset works. <img src="https://uc-r.github.io/public/images/analytics/bootstrap/bootstrap.png" width="600"/>
 
-- After running a learning algorithm on each one of the bootstrapped datasets, all models are combined by taking their average. the test data/new data then go through this averaged classifier/combined classifier and predict the output.
+    <h4 align="center">
 
-Here is an image to make it clear on how bagging works,
-<img src="https://prachimjoshi.files.wordpress.com/2015/07/screen_shot_2010-12-03_at_5-46-21_pm.png" width="600">
+    Resampling from original dataset to bootstrapped datasets
 
-<h4 align="right">Source: https://prachimjoshi.files.wordpress.com</h4>
+    </h4>
+
+    <h4 align="right">
+
+    Source: https://uc-r.github.io
+
+    </h4>
+
+-   After running a learning algorithm on each one of the bootstrapped datasets, all models are combined by taking their average. the test data/new data then go through this averaged classifier/combined classifier and predict the output.
+
+Here is an image to make it clear on how bagging works, <img src="https://prachimjoshi.files.wordpress.com/2015/07/screen_shot_2010-12-03_at_5-46-21_pm.png" width="600"/>
+
+<h4 align="right">
+
+Source: https://prachimjoshi.files.wordpress.com
+
+</h4>
+
 Please check out [this](https://www.kaggle.com/masumrumi/bagging-with-titanic-dataset) kernel if you want to find out more about bagging classifier.
 
 ```{julia}
@@ -2582,6 +2514,7 @@ bagging_grid.score(X,y)
 ```
 
 <h3>Why use Bagging? (Pros and cons)</h3>
+
 Bagging works best with strong and complex models(for example, fully developed decision trees). However, don't let that fool you to thinking that similar to a decision tree, bagging also overfits the model. Instead, bagging reduces overfitting since a lot of the sample training data are repeated and used to create base estimators. With a lot of equally likely training data, bagging is not very susceptible to overfitting with noisy data, therefore reduces variance. However, the downside is that this leads to an increase in bias.
 
 <h4>Random Forest VS. Bagging Classifier</h4>
@@ -2592,7 +2525,7 @@ If some of you are like me, you may find Random Forest to be similar to Bagging 
 
 <a id="AdaBoost"></a>
 
----
+------------------------------------------------------------------------
 
 AdaBoost is another <b>ensemble model</b> and is quite different than Bagging. Let's point out the core concepts.
 
@@ -2608,26 +2541,31 @@ AdaBoost is another <b>ensemble model</b> and is quite different than Bagging. L
 
 To illustrate what we have talked about so far let's look at the following visualization.
 
-<img src="https://cdn-images-1.medium.com/max/1600/0*paPv7vXuq4eBHZY7.png">
-<h5 align="right"> Source: Diogo(Medium)</h5>
+<img src="https://cdn-images-1.medium.com/max/1600/0*paPv7vXuq4eBHZY7.png"/>
+
+<h5 align="right">
+
+Source: Diogo(Medium)
+
+</h5>
 
 Let's dive into each one of the nitty-gritty stuff about AdaBoost:
 
----
+------------------------------------------------------------------------
 
 > <b>First</b>, we determine the best feature to split the dataset using Gini index(basics from decision tree). The feature with the lowest Gini index becomes the first stump in the AdaBoost stump chain(the lower the Gini index is, the better unmixed the label is, therefore, better split).
 
----
+------------------------------------------------------------------------
 
 > <b>Secondly</b>, we need to determine how much say a stump will have in the final classification and how we can calculate that.
 
-- We learn how much say a stump has in the final classification by calculating how well it classified the samples (aka calculate the total error of the weight).
-- The <b>Total Error</b> for a stump is the sum of the weights associated with the incorrectly classified samples. For example, lets say, we start a stump with 10 datasets. The first stump will uniformly distribute an weight amoung all the datapoints. Which means each data point will have 1/10 weight. Let's say once the weight is distributed we run the model and find 2 incorrect predicitons. In order to calculate the total erorr we add up all the misclassified weights. Here we get 1/10 + 1/10 = 2/10 or 1/5. This is our total error. We can also think about it
+-   We learn how much say a stump has in the final classification by calculating how well it classified the samples (aka calculate the total error of the weight).
+-   The <b>Total Error</b> for a stump is the sum of the weights associated with the incorrectly classified samples. For example, lets say, we start a stump with 10 datasets. The first stump will uniformly distribute an weight amoung all the datapoints. Which means each data point will have 1/10 weight. Let's say once the weight is distributed we run the model and find 2 incorrect predicitons. In order to calculate the total erorr we add up all the misclassified weights. Here we get 1/10 + 1/10 = 2/10 or 1/5. This is our total error. We can also think about it
 
 $$ \epsilon_t = \frac{\text{misclassifications}\_t}{\text{observations}\_t} $$
 
-- Since the weight is uniformly distributed(all add up to 1) among all data points, the total error will always be between 0(perfect stump) and 1(horrible stump).
-- We use the total error to determine the amount of say a stump has in the final classification using the following formula
+-   Since the weight is uniformly distributed(all add up to 1) among all data points, the total error will always be between 0(perfect stump) and 1(horrible stump).
+-   We use the total error to determine the amount of say a stump has in the final classification using the following formula
 
 $$ \alpha_t = \frac{1}{2}ln \left(\frac{1-\epsilon_t}{\epsilon_t}\right) \text{where } \epsilon_t < 1$$
 
@@ -2637,22 +2575,27 @@ $$ \epsilon_t = \frac{\text{misclassifications}\_t}{\text{observations}\_t} $$
 
 Here...
 
-- $\alpha_t$ = Amount of Say
-- $\epsilon_t$ = Total error
+-   $\alpha_t$ = Amount of Say
+-   $\epsilon_t$ = Total error
 
 We can draw a graph to determine the amount of say using the value of total error(0 to 1)
 
-<img src="http://chrisjmccormick.files.wordpress.com/2013/12/adaboost_alphacurve.png">
-<h5 align="right"> Source: Chris McCormick</h5>
+<img src="http://chrisjmccormick.files.wordpress.com/2013/12/adaboost_alphacurve.png"/>
 
-- The blue line tells us the amount of say for <b>Total Error(Error rate)</b> between 0 and 1.
-- When the stump does a reasonably good job, and the <b>total error</b> is minimal, then the <b>amount of say(Alpha)</b> is relatively large, and the alpha value is positive.
-- When the stump does an average job(similar to a coin flip/the ratio of getting correct and incorrect ~50%/50%), then the <b>total error</b> is ~0.5. In this case the <b>amount of say</b> is <b>0</b>.
-- When the error rate is high let's say close to 1, then the <b>amount of say</b> will be negative, which means if the stump outputs a value as "survived" the included weight will turn that value into "not survived."
+<h5 align="right">
+
+Source: Chris McCormick
+
+</h5>
+
+-   The blue line tells us the amount of say for <b>Total Error(Error rate)</b> between 0 and 1.
+-   When the stump does a reasonably good job, and the <b>total error</b> is minimal, then the <b>amount of say(Alpha)</b> is relatively large, and the alpha value is positive.
+-   When the stump does an average job(similar to a coin flip/the ratio of getting correct and incorrect \~50%/50%), then the <b>total error</b> is \~0.5. In this case the <b>amount of say</b> is <b>0</b>.
+-   When the error rate is high let's say close to 1, then the <b>amount of say</b> will be negative, which means if the stump outputs a value as "survived" the included weight will turn that value into "not survived."
 
 P.S. If the <b>Total Error</b> is 1 or 0, then this equation will freak out. A small amount of error is added to prevent this from happening.
 
----
+------------------------------------------------------------------------
 
 > <b>Third</b>, We need to learn how to modify the weights so that the next stump will take the errors that the current stump made into account. The pseducode for calculating the new sample weight is as follows.
 
@@ -2666,10 +2609,10 @@ $$ D\_{t+1}(i) = D_t(i) e^{-\alpha_t y_i h_t(x_i)} $$
 
 Here,
 
-- $D_{t+1}(i)$ = New Sample Weight.
-- $D_t(i)$ = Current Sample weight.
-- $\alpha_t$ = Amount of Say, alpha value, this is the coefficient that gets updated in each iteration and
-- $y_i h_t(x_i)$ = place holder for 1 if stump correctly classified, -1 if misclassified.
+-   $D_{t+1}(i)$ = New Sample Weight.
+-   $D_t(i)$ = Current Sample weight.
+-   $\alpha_t$ = Amount of Say, alpha value, this is the coefficient that gets updated in each iteration and
+-   $y_i h_t(x_i)$ = place holder for 1 if stump correctly classified, -1 if misclassified.
 
 Finally, we put together the combined classifier, which is
 
@@ -2690,9 +2633,13 @@ and $y$ is binary **with values -1 and 1**
 P.S. Since the stump barely captures essential specs about the dataset, the model is highly biased in the beginning. However, as the chain of stumps continues and at the end of the process, AdaBoost becomes a strong tree and reduces both bias and variance.
 
 <h3>Resources:</h3>
+
 <ul>
-    <li><a href="https://www.youtube.com/watch?v=LsK-xG1cLYA">Statquest</a></li>
-    <li><a href="https://www.youtube.com/watch?v=-DUxtdeCiB4">Principles of Machine Learning | AdaBoost(Video)</a></li>
+
+<li><a href="https://www.youtube.com/watch?v=LsK-xG1cLYA">Statquest</a></li>
+
+<li><a href="https://www.youtube.com/watch?v=-DUxtdeCiB4">Principles of Machine Learning \| AdaBoost(Video)</a></li>
+
 </ul>
 
 ```{julia}
@@ -2729,34 +2676,38 @@ adaBoost_grid.score(X,y)
 
 ## Pros and cons of boosting
 
----
+------------------------------------------------------------------------
 
 ### Pros
 
-- Achieves higher performance than bagging when hyper-parameters tuned properly.
-- Can be used for classification and regression equally well.
-- Easily handles mixed data types.
-- Can use "robust" loss functions that make the model resistant to outliers.
+-   Achieves higher performance than bagging when hyper-parameters tuned properly.
+-   Can be used for classification and regression equally well.
+-   Easily handles mixed data types.
+-   Can use "robust" loss functions that make the model resistant to outliers.
 
----
+------------------------------------------------------------------------
 
 ### Cons
 
-- Difficult and time consuming to properly tune hyper-parameters.
-- Cannot be parallelized like bagging (bad scalability when huge amounts of data).
-- More risk of overfitting compared to bagging.
+-   Difficult and time consuming to properly tune hyper-parameters.
+-   Cannot be parallelized like bagging (bad scalability when huge amounts of data).
+-   More risk of overfitting compared to bagging.
 
-<h3>Resources: </h3>
+<h3>Resources:</h3>
+
 <ul>
-    <li><a href="http://mccormickml.com/2013/12/13/adaboost-tutorial/">AdaBoost Tutorial-Chris McCormick</a></li>
-    <li><a href="http://rob.schapire.net/papers/explaining-adaboost.pdf">Explaining AdaBoost by Robert Schapire(One of the original author of AdaBoost)</a></li>
+
+<li><a href="http://mccormickml.com/2013/12/13/adaboost-tutorial/">AdaBoost Tutorial-Chris McCormick</a></li>
+
+<li><a href="http://rob.schapire.net/papers/explaining-adaboost.pdf">Explaining AdaBoost by Robert Schapire(One of the original author of AdaBoost)</a></li>
+
 </ul>
 
 ## 7i. Gradient Boosting Classifier
 
 <a id="gradient_boosting"></a>
 
----
+------------------------------------------------------------------------
 
 ```{julia}
 #| _cell_guid: d32d6df9-b8e7-4637-bacc-2baec08547b8
@@ -2773,23 +2724,31 @@ gradient_accy = round(accuracy_score(y_pred, y_test), 3)
 print(gradient_accy)
 ```
 
-<div class=" alert alert-info">
-<h3>Resources: </h3>
+::: {.alert .alert-info}
+<h3>Resources:</h3>
+
 <ul>
-    <li><a href="https://www.youtube.com/watch?v=sDv4f4s2SB8">Gradient Descent(StatQuest)</a></li>
-    <li><a href="https://www.youtube.com/watch?v=3CC4N4z3GJc">Gradient Boost(Regression Main Ideas)(StatQuest)</a></li>
-    <li><a href="https://www.youtube.com/watch?v=3CC4N4z3GJc">Gradient Boost(Regression Calculation)(StatQuest)</a></li>
-    <li><a href="https://www.youtube.com/watch?v=jxuNLH5dXCs">Gradient Boost(Classification Main Ideas)(StatQuest)</a></li>
-    <li><a href="https://www.youtube.com/watch?v=StWY5QWMXCw">Gradient Boost(Classification Calculation)(StatQuest)</a></li>
-    <li><a href="https://www.analyticsvidhya.com/blog/2016/02/complete-guide-parameter-tuning-gradient-boosting-gbm-python/">Complete Machine Learning Guide to Parameter Tuning in Gradient Boosting (GBM) in Python</a></li>
+
+<li><a href="https://www.youtube.com/watch?v=sDv4f4s2SB8">Gradient Descent(StatQuest)</a></li>
+
+<li><a href="https://www.youtube.com/watch?v=3CC4N4z3GJc">Gradient Boost(Regression Main Ideas)(StatQuest)</a></li>
+
+<li><a href="https://www.youtube.com/watch?v=3CC4N4z3GJc">Gradient Boost(Regression Calculation)(StatQuest)</a></li>
+
+<li><a href="https://www.youtube.com/watch?v=jxuNLH5dXCs">Gradient Boost(Classification Main Ideas)(StatQuest)</a></li>
+
+<li><a href="https://www.youtube.com/watch?v=StWY5QWMXCw">Gradient Boost(Classification Calculation)(StatQuest)</a></li>
+
+<li><a href="https://www.analyticsvidhya.com/blog/2016/02/complete-guide-parameter-tuning-gradient-boosting-gbm-Julia/">Complete Machine Learning Guide to Parameter Tuning in Gradient Boosting (GBM) in Julia</a></li>
+
 </ul>
-</div>
+:::
 
 ## 7j. XGBClassifier
 
 <a id="XGBClassifier"></a>
 
----
+------------------------------------------------------------------------
 
 ```{julia}
 #| _cell_guid: 5d94cc5b-d8b7-40d3-b264-138539daabfa
@@ -2807,7 +2766,7 @@ print(gradient_accy)
 
 <a id="extra_tree"></a>
 
----
+------------------------------------------------------------------------
 
 ```{julia}
 #| _cell_guid: 2e567e01-6b5f-4313-84af-cc378c3b709e
@@ -2825,7 +2784,7 @@ print(extraTree_accy)
 
 <a id="GaussianProcessClassifier"></a>
 
----
+------------------------------------------------------------------------
 
 ```{julia}
 #| _cell_guid: 23bd5744-e04d-49bb-9d70-7c2a518f76dd
@@ -2843,7 +2802,7 @@ print(gau_pro_accy)
 
 <a id="voting_classifer"></a>
 
----
+------------------------------------------------------------------------
 
 ```{julia}
 #| _cell_guid: ac208dd3-1045-47bb-9512-de5ecb5c81b0
@@ -2898,7 +2857,7 @@ print(voting_accy)
 
 <a id="submit_predictions"></a>
 
----
+------------------------------------------------------------------------
 
 ```{julia}
 #| _uuid: eb0054822f296ba86aa6005b2a5e35fbc1aec88b
@@ -2937,59 +2896,65 @@ submission.Survived = submission.Survived.astype(int)
 submission.to_csv("titanic1_submission.csv", index=False)
 ```
 
-<div class="alert alert-info">
-    <h1>Resources</h1>
+::: {.alert .alert-info}
+```         
+<h1>Resources</h1>
+<ul>
+    <li><b>Statistics</b></li>
     <ul>
-        <li><b>Statistics</b></li>
-        <ul>
-            <li><a href="https://statistics.laerd.com/statistical-guides/measures-of-spread-standard-deviation.php">Types of Standard Deviation</a></li>
-            <li><a href="https://blog.minitab.com/blog/statistics-and-quality-data-analysis/what-is-a-t-test-and-why-is-it-like-telling-a-kid-to-clean-up-that-mess-in-the-kitchen">What Is a t-test? And Why Is It Like Telling a Kid to Clean Up that Mess in the Kitchen?</a></li>
-            <li><a href="https://blog.minitab.com/blog/statistics-and-quality-data-analysis/what-are-t-values-and-p-values-in-statistics">What Are T Values and P Values in Statistics?</a></li>
-            <li><a href="https://www.youtube.com/watch?v=E4KCfcVwzyw">What is p-value? How we decide on our confidence level.</a></li>
-        </ul>
-        <li><b>Writing pythonic code</b></li>
-        <ul>
-            <li><a href="https://www.kaggle.com/rtatman/six-steps-to-more-professional-data-science-code">Six steps to more professional data science code</a></li>
-            <li><a href="https://www.kaggle.com/jpmiller/creating-a-good-analytics-report">Creating a Good Analytics Report</a></li>
-            <li><a href="https://en.wikipedia.org/wiki/Code_smell">Code Smell</a></li>
-            <li><a href="https://www.python.org/dev/peps/pep-0008/">Python style guides</a></li>
-            <li><a href="https://gist.github.com/sloria/7001839">The Best of the Best Practices(BOBP) Guide for Python</a></li>
-            <li><a href="https://www.python.org/dev/peps/pep-0020/">PEP 20 -- The Zen of Python</a></li>
-            <li><a href="https://docs.python-guide.org/">The Hitchiker's Guide to Python</a></li>
-            <li><a href="https://realpython.com/tutorials/best-practices/">Python Best Practice Patterns</a></li>
-            <li><a href="http://www.nilunder.com/blog/2013/08/03/pythonic-sensibilities/">Pythonic Sensibilities</a></li>
-        </ul>
-        <li><b>Why Scikit-Learn?</b></li>
-        <ul>
-            <li><a href="https://www.oreilly.com/content/intro-to-scikit-learn/">Introduction to Scikit-Learn</a></li>
-            <li><a href="https://www.oreilly.com/content/six-reasons-why-i-recommend-scikit-learn/">Six reasons why I recommend scikit-learn</a></li>
-            <li><a href="https://hub.packtpub.com/learn-scikit-learn/">Why you should learn Scikit-learn</a></li>
-            <li><a href="https://www.kaggle.com/baghern/a-deep-dive-into-sklearn-pipelines">A Deep Dive Into Sklearn Pipelines</a></li>
-            <li><a href="https://www.kaggle.com/sermakarevich/sklearn-pipelines-tutorial">Sklearn pipelines tutorial</a></li>
-            <li><a href="https://www.kdnuggets.com/2017/12/managing-machine-learning-workflows-scikit-learn-pipelines-part-1.html">Managing Machine Learning workflows with Sklearn pipelines</a></li>
-            <li><a href="https://towardsdatascience.com/a-simple-example-of-pipeline-in-machine-learning-with-scikit-learn-e726ffbb6976">A simple example of pipeline in Machine Learning using SKlearn</a></li>
-        </ul>
+        <li><a href="https://statistics.laerd.com/statistical-guides/measures-of-spread-standard-deviation.php">Types of Standard Deviation</a></li>
+        <li><a href="https://blog.minitab.com/blog/statistics-and-quality-data-analysis/what-is-a-t-test-and-why-is-it-like-telling-a-kid-to-clean-up-that-mess-in-the-kitchen">What Is a t-test? And Why Is It Like Telling a Kid to Clean Up that Mess in the Kitchen?</a></li>
+        <li><a href="https://blog.minitab.com/blog/statistics-and-quality-data-analysis/what-are-t-values-and-p-values-in-statistics">What Are T Values and P Values in Statistics?</a></li>
+        <li><a href="https://www.youtube.com/watch?v=E4KCfcVwzyw">What is p-value? How we decide on our confidence level.</a></li>
     </ul>
-    <h1>Credits</h1>
+    <li><b>Writing Juliaic code</b></li>
     <ul>
-        <li>To Brandon Foltz for his <a href="https://www.youtube.com/channel/UCFrjdcImgcQVyFbK04MBEhA">youtube</a> channel and for being an amazing teacher.</li>
-        <li>To GA where I started my data science journey.</li>
-        <li>To Kaggle community for inspiring me over and over again with all the resources I need.</li>
-        <li>To Udemy Course "Deployment of Machine Learning". I have used and modified some of the code from this course to help making the learning process intuitive.</li>
+        <li><a href="https://www.kaggle.com/rtatman/six-steps-to-more-professional-data-science-code">Six steps to more professional data science code</a></li>
+        <li><a href="https://www.kaggle.com/jpmiller/creating-a-good-analytics-report">Creating a Good Analytics Report</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Code_smell">Code Smell</a></li>
+        <li><a href="https://www.Julia.org/dev/peps/pep-0008/">Julia style guides</a></li>
+        <li><a href="https://gist.github.com/sloria/7001839">The Best of the Best Practices(BOBP) Guide for Julia</a></li>
+        <li><a href="https://www.Julia.org/dev/peps/pep-0020/">PEP 20 -- The Zen of Julia</a></li>
+        <li><a href="https://docs.Julia-guide.org/">The Hitchiker's Guide to Julia</a></li>
+        <li><a href="https://realJulia.com/tutorials/best-practices/">Julia Best Practice Patterns</a></li>
+        <li><a href="http://www.nilunder.com/blog/2013/08/03/Juliaic-sensibilities/">Juliaic Sensibilities</a></li>
     </ul>
-</div>
+    <li><b>Why Scikit-Learn?</b></li>
+    <ul>
+        <li><a href="https://www.oreilly.com/content/intro-to-scikit-learn/">Introduction to Scikit-Learn</a></li>
+        <li><a href="https://www.oreilly.com/content/six-reasons-why-i-recommend-scikit-learn/">Six reasons why I recommend scikit-learn</a></li>
+        <li><a href="https://hub.packtpub.com/learn-scikit-learn/">Why you should learn Scikit-learn</a></li>
+        <li><a href="https://www.kaggle.com/baghern/a-deep-dive-into-sklearn-pipelines">A Deep Dive Into Sklearn Pipelines</a></li>
+        <li><a href="https://www.kaggle.com/sermakarevich/sklearn-pipelines-tutorial">Sklearn pipelines tutorial</a></li>
+        <li><a href="https://www.kdnuggets.com/2017/12/managing-machine-learning-workflows-scikit-learn-pipelines-part-1.html">Managing Machine Learning workflows with Sklearn pipelines</a></li>
+        <li><a href="https://towardsdatascience.com/a-simple-example-of-pipeline-in-machine-learning-with-scikit-learn-e726ffbb6976">A simple example of pipeline in Machine Learning using SKlearn</a></li>
+    </ul>
+</ul>
+<h1>Credits</h1>
+<ul>
+    <li>To Brandon Foltz for his <a href="https://www.youtube.com/channel/UCFrjdcImgcQVyFbK04MBEhA">youtube</a> channel and for being an amazing teacher.</li>
+    <li>To GA where I started my data science journey.</li>
+    <li>To Kaggle community for inspiring me over and over again with all the resources I need.</li>
+    <li>To Udemy Course "Deployment of Machine Learning". I have used and modified some of the code from this course to help making the learning process intuitive.</li>
+</ul>
+```
+:::
 
-<div class="alert alert-info">
+::: {.alert .alert-info}
 <h4>If you like to discuss any other projects or just have a chat about data science topics, I'll be more than happy to connect with you on:</h4>
-    <ul>
-        <li><a href="https://www.linkedin.com/in/masumrumi/"><b>LinkedIn</b></a></li>
-        <li><a href="https://github.com/masumrumi"><b>Github</b></a></li>
-        <li><a href="https://masumrumi.github.io/cv/"><b>masumrumi.github.io/cv/</b></a></li>
-        <li><a href="https://www.youtube.com/channel/UC1mPjGyLcZmsMgZ8SJgrfdw"><b>Youtube</b></a></li>
-    </ul>
+
+```         
+<ul>
+    <li><a href="https://www.linkedin.com/in/masumrumi/"><b>LinkedIn</b></a></li>
+    <li><a href="https://github.com/masumrumi"><b>Github</b></a></li>
+    <li><a href="https://masumrumi.github.io/cv/"><b>masumrumi.github.io/cv/</b></a></li>
+    <li><a href="https://www.youtube.com/channel/UC1mPjGyLcZmsMgZ8SJgrfdw"><b>Youtube</b></a></li>
+</ul>
+```
 
 <p>This kernel will always be a work in progress. I will incorporate new concepts of data science as I comprehend them with each update. If you have any idea/suggestions about this notebook, please let me know. Any feedback about further improvements would be genuinely appreciated.</p>
 
 <h1>If you have come this far, Congratulations!!</h1>
 
-<h1>If this notebook helped you in any way or you liked it, please upvote and/or leave a comment!! :)</h1></div>
+<h1>If this notebook helped you in any way or you liked it, please upvote and/or leave a comment!! :)</h1>
+:::

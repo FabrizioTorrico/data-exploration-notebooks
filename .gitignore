@@ -3,3 +3,7 @@
 .cache/*
 .quarto*
 .git/
+.vdoc.*
+/.cache/*
+.cache*
+.CondaPkg
