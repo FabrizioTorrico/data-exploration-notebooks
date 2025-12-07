@@ -1,3 +1,5 @@
+# 01 julia notebook
+
 .quarto/*
 .quarto-cache/*
 .cache/*
@@ -7,3 +9,17 @@
 /.cache/*
 .cache*
 .CondaPkg
+
+# 02 pixi
+.pixi/*
+!.pixi/config.toml
+.pixi/cache/*
+.pixi/cache/*
+.pixi/envs/*
+
+# python
+__pycache__/
+*.pyc
+
+# specific of project: "02 - lenet5/data"
+02 - lenet5/data/*
