@@ -156,6 +156,7 @@ Si usas `pixi`, la mayoría de dependencias se instalarán automáticamente desd
 - `checkpoints/` — Pesos y checkpoints guardados (ej.: checkpoints/googlenet_trained.pth).
 - `data/` — Conjuntos de datos para entrenamiento/validación/prueba.
 - `results/` — Logs y métricas de entrenamiento (CSV, curvas, métricas).
+- `model_images/` — Imágenes y visualizaciones de la arquitectura del modelo.
 - `src/` — Código fuente modular:
   - `config.py` — Configuración y parámetros de entrenamiento.
   - `data_loader.py` — Preparación y cargas de datos.
@@ -164,7 +165,7 @@ Si usas `pixi`, la mayoría de dependencias se instalarán automáticamente desd
 
 ---
 
-## 🏃 Uso básico
+## Uso básico
 
 - Preparar datos: colocar conjuntos en `data/` siguiendo la estructura esperada o usar los loaders incluidos.
 - Ajustar `config.py` para seleccionar la variante del modelo, número de épocas, `batch_size`, etc.
