@@ -1,0 +1,18 @@
+[workspace]
+authors = ["FabrizioTorrico <fabriziotorrico27@gmail.com>"]
+channels = ["https://prefix.dev/conda-forge"]
+name = "02 - lenet5"
+platforms = ["win-64"]
+version = "0.1.0"
+
+[system-requirements]
+cuda = "12.0"
+
+[dependencies]
+python = "3.12.*"
+pytorch = "*"
+torchvision = "*"
+pytorch-gpu = "*"
+cuda-version = "12.6.*"
+numpy = ">=2.3.5,<3"
+tqdm = ">=4.67.1,<5"

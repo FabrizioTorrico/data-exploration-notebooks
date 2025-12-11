@@ -23,3 +23,4 @@ __pycache__/
 
 # specific of project: "02 - lenet5/data"
 02 - lenet5/data/*
+03 - GoogleNet/data/*
