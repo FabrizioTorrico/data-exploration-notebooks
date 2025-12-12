@@ -1,3 +1,12 @@
+"""
+Modificaciones v3:
+1. Bloque de reduccion: (Sustituye al maxpool). 
+- Evita la destrucción de información usando convolucion junto al maxpool.
+la convolucion tiene stride
+2 Se elimina la distancia larga del sistema paralelo pero se hace un pasaje de parametros
+de inicio a fin de bloque
+"""
+
 import torch
 import torch.nn as nn
 
@@ -11,8 +20,7 @@ class ConvBlock(nn.Module):
     def forward(self, x):
         return self.relu(self.bn(self.conv(x)))
 
-# --- BLOQUE DE REDUCCIÓN (Sustituye al MaxPool) ---
-# Evita la destrucción de información usando conv con stride
+# --- BLOQUE DE REDUCCIÓN  ---
 class ReductionBlock(nn.Module):
     def __init__(self, in_channels, out_conv_channels):
         super(ReductionBlock, self).__init__()
@@ -25,7 +33,6 @@ class ReductionBlock(nn.Module):
 
     def forward(self, x):
         # Concatenamos los canales originales (pooleados) con los nuevos (convolucionados)
-        # Salida Channels = In_Channels + Out_Conv_Channels
         return torch.cat([self.branch_pool(x), self.branch_conv(x)], dim=1)
 
 # --- BLOQUE PARALELO (Inicio) ---
@@ -114,9 +121,7 @@ class GoogLeNetModifiedV3(nn.Module):
         self.inception3b = ParallelResidualBlock(256, 128, 128, 192, 32, 48, 64)
         
         # REDUCCIÓN 1 (Reemplaza MaxPool3)
-        # In: 432. 
-        # Branch Pool: 432 channels. Branch Conv: 160 channels (Stride 2).
-        # Total Out: 432 + 160 = 592.
+
         self.reduction3 = ReductionBlock(432, 160)
 
         # --- FASE 2: (Solo 3x3) ---

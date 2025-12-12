@@ -24,6 +24,13 @@ __pycache__/
 # specific of project: "02 - lenet5/data"
 02 - lenet5/data/*
 03 - GoogleNet/data/*
+04 - Car detection/capturas/*
+04 - Car detection/capturas/*
+
 # pixi environments
 .pixi/*
 !.pixi/config.toml
+.venv/*
+*venv/*
+list/*
+*list/*

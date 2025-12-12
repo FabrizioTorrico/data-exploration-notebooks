@@ -1,3 +1,10 @@
+"""
+Modificaciones v1:
+Se implementa el bloque SplitInceptionBlock, este es un bloque con 
+2 ramas que se fusionan, una de 3x3 y otra de 5x5.
+Cada una de estas ramas tiene un maxpool
+"""
+
 import torch
 import torch.nn as nn
 
@@ -29,8 +36,6 @@ class InceptionAux(nn.Module):
         x = self.dropout(x)
         x = self.fc2(x)
         return x
-
-# --- ARQUITECTURA "SPLIT + BOTTLENECK" ---
 
 class SplitInceptionBlock(nn.Module):
     def __init__(
@@ -108,7 +113,7 @@ class GoogLeNetModifiedV1(nn.Module):
         self.conv3 = ConvBlock(64, 192, kernel_size=3, padding=1)
         self.maxpool2 = nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True)
 
-        # --- BLOQUES INCEPTION (Recalculados para Bottleneck) ---
+        # --- BLOQUES INCEPTION ---
         # La entrada (in_channels) de cada bloque debe coincidir con la salida comprimida del anterior.
         # Salida = out_1x1 + (out_3x3+pool3)/2 + (out_5x5+pool5)/2
         
@@ -152,7 +157,7 @@ class GoogLeNetModifiedV1(nn.Module):
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.dropout = nn.Dropout(0.4)
-        # Linear final recibe 704 en vez de 1024 (Ahorro masivo de params aqui)
+
         self.fc = nn.Linear(704, num_classes)
 
     def forward(self, x):
